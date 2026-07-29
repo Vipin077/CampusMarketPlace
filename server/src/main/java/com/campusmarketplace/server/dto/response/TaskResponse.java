@@ -1,43 +1,33 @@
 package com.campusmarketplace.server.dto.response;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class TaskResponse {
-    private Long id;
+
+    private String id;
+
     private String title;
+
     private String description;
-    private boolean completed;
 
-    public TaskResponse() {
-    }
+    private Double budget;
 
-    public Long getId() {
-        return id;
-    }
+    private String category;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    private String location;
 
-    public String getTitle() {
-        return title;
-    }
+    private String status;
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    private String createdBy;
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public boolean isCompleted() {
-        return completed;
-    }
-
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
-    }
+    private LocalDateTime createdAt;
 }

@@ -1,25 +1,24 @@
 package com.campusmarketplace.server.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+@Data
 public class CreateTaskRequest {
+
+    @NotBlank(message = "Title is required")
     private String title;
+
+    @NotBlank(message = "Description is required")
     private String description;
 
-    public CreateTaskRequest() {
-    }
+    @NotNull(message = "Budget is required")
+    private Double budget;
 
-    public String getTitle() {
-        return title;
-    }
+    @NotBlank(message = "Category is required")
+    private String category;
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    @NotBlank(message = "Location is required")
+    private String location;
 }

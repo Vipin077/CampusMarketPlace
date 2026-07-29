@@ -1,43 +1,37 @@
 package com.campusmarketplace.server.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Document(collection = "tasks")
 public class Task {
-    private Long id;
+
+    @Id
+    private String id;
+
     private String title;
+
     private String description;
-    private boolean completed;
 
-    public Task() {
-    }
+    private Double budget;
 
-    public Long getId() {
-        return id;
-    }
+    private String category;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    private String location;
 
-    public String getTitle() {
-        return title;
-    }
+    private String status;
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    private String createdBy;
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public boolean isCompleted() {
-        return completed;
-    }
-
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
-    }
+    private LocalDateTime createdAt;
 }
