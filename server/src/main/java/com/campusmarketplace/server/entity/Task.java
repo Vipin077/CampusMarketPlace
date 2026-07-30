@@ -29,9 +29,21 @@ public class Task {
 
     private String location;
 
+    // OPEN, IN_PROGRESS, SUBMITTED, COMPLETED
     private String status;
 
+    // Task creator
     private String createdBy;
 
+    // User who accepted the task
+    private String assignedTo;
+
+    // Time when task was accepted
+    private LocalDateTime acceptedAt;
+
+    // Original task attachment
+    private String attachmentUrl;
+
+    // Task creation time
     private LocalDateTime createdAt;
 }

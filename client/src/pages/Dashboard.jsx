@@ -97,16 +97,12 @@ export default function Dashboard() {
                 key={item.title}
                 onClick={() => item.path && navigate(item.path)}
                 className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-lg ${
-                  item.path
-                    ? "cursor-pointer hover:scale-105"
-                    : ""
+                  item.path ? "cursor-pointer hover:scale-105" : ""
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-500">
-                      {item.title}
-                    </p>
+                    <p className="text-sm text-slate-500">{item.title}</p>
 
                     <h2 className="mt-2 text-3xl font-bold">
                       {item.value}
@@ -141,9 +137,7 @@ export default function Dashboard() {
 
             <div className="mt-5 space-y-4">
               {dashboard.recentTasks.length === 0 ? (
-                <p className="text-slate-500">
-                  No tasks yet.
-                </p>
+                <p className="text-slate-500">No tasks yet.</p>
               ) : (
                 dashboard.recentTasks.map((task) => (
                   <div
@@ -189,6 +183,14 @@ export default function Dashboard() {
               >
                 <Search size={20} />
                 Explore Tasks
+              </button>
+
+              <button
+                onClick={() => navigate("/my-accepted-tasks")}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-green-300 bg-green-50 py-3 text-green-700 hover:bg-green-100"
+              >
+                <CheckCircle size={20} />
+                My Accepted Tasks
               </button>
             </div>
           </div>

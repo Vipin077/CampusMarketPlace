@@ -18,6 +18,12 @@ public class TaskMapper {
                 .location(task.getLocation())
                 .status(task.getStatus())
                 .createdBy(task.getCreatedBy())
+
+               
+                .assignedTo(task.getAssignedTo())
+                .acceptedAt(task.getAcceptedAt())
+
+                .attachmentUrl(task.getAttachmentUrl())
                 .createdAt(task.getCreatedAt())
                 .build();
     }

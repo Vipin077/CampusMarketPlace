@@ -13,6 +13,9 @@ public interface TaskRepository extends MongoRepository<Task, String>,
 
     List<Task> findByCreatedBy(String createdBy);
 
+    
+    List<Task> findByAssignedTo(String assignedTo);
+
     List<Task> findByCreatedByNot(String createdBy);
 
     long countByCreatedBy(String createdBy);

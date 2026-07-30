@@ -3,13 +3,19 @@ package com.campusmarketplace.server.controller;
 import com.campusmarketplace.server.dto.request.CreateTaskRequest;
 import com.campusmarketplace.server.dto.response.TaskResponse;
 import com.campusmarketplace.server.service.TaskService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -19,13 +25,21 @@ public class TaskController {
 
     private final TaskService taskService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TaskResponse> createTask(
-            @Valid @RequestBody CreateTaskRequest request) {
+
+            @Valid
+            @RequestPart("task")
+            CreateTaskRequest request,
+
+            @RequestPart(value = "attachment", required = false)
+            MultipartFile attachment
+    ) {
 
         return new ResponseEntity<>(
-                taskService.createTask(request),
-                HttpStatus.CREATED);
+                taskService.createTask(request, attachment),
+                HttpStatus.CREATED
+        );
     }
 
     @GetMapping
@@ -38,12 +52,68 @@ public class TaskController {
         return ResponseEntity.ok(taskService.getTaskById(id));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<TaskResponse> updateTask(
-            @PathVariable String id,
-            @Valid @RequestBody CreateTaskRequest request) {
+    @GetMapping(
+            value = "/{id}/attachment",
+            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
+    )
+    public ResponseEntity<Resource> downloadAttachment(
+            @PathVariable String id
+    ) {
 
-        return ResponseEntity.ok(taskService.updateTask(id, request));
+        Resource resource = taskService.downloadAttachment(id);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + resource.getFilename() + "\""
+                )
+                .body(resource);
+    }
+
+    @PutMapping(
+            value = "/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<TaskResponse> updateTask(
+
+            @PathVariable String id,
+
+            @RequestPart("task")
+            String taskJson,
+
+            @RequestPart(value = "attachment", required = false)
+            MultipartFile attachment
+
+    ) throws IOException {
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        CreateTaskRequest request =
+                mapper.readValue(taskJson, CreateTaskRequest.class);
+
+        return ResponseEntity.ok(
+                taskService.updateTask(id, request, attachment)
+        );
+    }
+
+    @PostMapping("/{id}/accept")
+    public ResponseEntity<TaskResponse> acceptTask(
+            @PathVariable String id
+    ) {
+
+        return ResponseEntity.ok(
+                taskService.acceptTask(id)
+        );
+    }
+
+    // NEW
+    @GetMapping("/accepted")
+    public ResponseEntity<List<TaskResponse>> getAcceptedTasks() {
+
+        return ResponseEntity.ok(
+                taskService.getAcceptedTasks()
+        );
     }
 
     @DeleteMapping("/{id}")

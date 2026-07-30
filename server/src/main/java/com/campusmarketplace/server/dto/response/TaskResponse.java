@@ -29,5 +29,13 @@ public class TaskResponse {
 
     private String createdBy;
 
+   
+    private String assignedTo;
+
+    
+    private LocalDateTime acceptedAt;
+
+    private String attachmentUrl;
+
     private LocalDateTime createdAt;
 }

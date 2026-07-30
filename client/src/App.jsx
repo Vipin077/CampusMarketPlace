@@ -6,6 +6,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import CreateTask from "./pages/CreateTask";
 import MyTasks from "./pages/MyTasks";
+import MyAcceptedTasks from "./pages/MyAcceptedTasks";
 import ExploreTasks from "./pages/ExploreTasks";
 import EditTask from "./pages/EditTask";
 import TaskDetails from "./pages/TaskDetails";
@@ -48,6 +49,15 @@ function App() {
         element={
           <PrivateRoute>
             <MyTasks />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/my-accepted-tasks"
+        element={
+          <PrivateRoute>
+            <MyAcceptedTasks />
           </PrivateRoute>
         }
       />

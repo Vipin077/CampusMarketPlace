@@ -3,7 +3,7 @@ import DashboardLayout from "../components/layout/DashboardLayout";
 import TaskCard from "../components/task/TaskCard";
 import TaskService from "../services/TaskService";
 
-export default function MyTasks() {
+export default function MyAcceptedTasks() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -13,31 +13,12 @@ export default function MyTasks() {
 
   async function fetchTasks() {
     try {
-      const data = await TaskService.getMyTasks();
+      const data = await TaskService.getAcceptedTasks();
       setTasks(data);
     } catch (error) {
-      console.error("Error fetching tasks:", error);
+      console.error("Error fetching accepted tasks:", error);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleDelete(taskId) {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this task?"
-    );
-
-    if (!confirmDelete) return;
-
-    try {
-      await TaskService.deleteTask(taskId);
-
-      setTasks((prev) => prev.filter((task) => task.id !== taskId));
-
-      alert("Task deleted successfully.");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to delete task.");
     }
   }
 
@@ -45,14 +26,14 @@ export default function MyTasks() {
     <DashboardLayout>
       <div className="p-6">
         <h1 className="text-3xl font-bold mb-6">
-          My Tasks
+          My Accepted Tasks
         </h1>
 
         {loading ? (
           <p className="text-gray-500">Loading...</p>
         ) : tasks.length === 0 ? (
           <p className="text-gray-500">
-            You haven't created any tasks yet.
+            You haven't accepted any tasks yet.
           </p>
         ) : (
           <div className="grid gap-5">
@@ -60,8 +41,7 @@ export default function MyTasks() {
               <TaskCard
                 key={task.id}
                 task={task}
-                showActions={true}
-                onDelete={handleDelete}
+                showActions={false}
               />
             ))}
           </div>
