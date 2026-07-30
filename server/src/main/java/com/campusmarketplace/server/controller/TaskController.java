@@ -5,6 +5,7 @@ import com.campusmarketplace.server.dto.response.TaskResponse;
 import com.campusmarketplace.server.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,28 +19,25 @@ public class TaskController {
 
     private final TaskService taskService;
 
-    // Create Task
     @PostMapping
     public ResponseEntity<TaskResponse> createTask(
             @Valid @RequestBody CreateTaskRequest request) {
 
-        TaskResponse response = taskService.createTask(request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(
+                taskService.createTask(request),
+                HttpStatus.CREATED);
     }
 
-    // Get All Tasks
     @GetMapping
     public ResponseEntity<List<TaskResponse>> getAllTasks() {
         return ResponseEntity.ok(taskService.getAllTasks());
     }
 
-    // Get Task By Id
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponse> getTaskById(@PathVariable String id) {
         return ResponseEntity.ok(taskService.getTaskById(id));
     }
 
-    // Update Task
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponse> updateTask(
             @PathVariable String id,
@@ -48,10 +46,50 @@ public class TaskController {
         return ResponseEntity.ok(taskService.updateTask(id, request));
     }
 
-    // Delete Task
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable String id) {
+    public ResponseEntity<String> deleteTask(@PathVariable String id) {
+
         taskService.deleteTask(id);
-        return ResponseEntity.noContent().build();
+
+        return ResponseEntity.ok("Task deleted successfully");
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<TaskResponse>> getMyTasks() {
+        return ResponseEntity.ok(taskService.getMyTasks());
+    }
+
+    @GetMapping("/explore")
+    public ResponseEntity<Page<TaskResponse>> exploreTasks(
+
+            @RequestParam(defaultValue = "") String search,
+
+            @RequestParam(defaultValue = "") String category,
+
+            @RequestParam(required = false) Double minBudget,
+
+            @RequestParam(required = false) Double maxBudget,
+
+            @RequestParam(defaultValue = "0") int page,
+
+            @RequestParam(defaultValue = "10") int size,
+
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+
+            @RequestParam(defaultValue = "desc") String direction
+    ) {
+
+        return ResponseEntity.ok(
+                taskService.exploreTasks(
+                        search,
+                        category,
+                        minBudget,
+                        maxBudget,
+                        page,
+                        size,
+                        sortBy,
+                        direction
+                )
+        );
     }
 }

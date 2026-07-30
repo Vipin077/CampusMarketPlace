@@ -5,9 +5,11 @@ import com.campusmarketplace.server.dto.response.TaskResponse;
 import com.campusmarketplace.server.entity.Task;
 import com.campusmarketplace.server.exception.TaskNotFoundException;
 import com.campusmarketplace.server.exception.UnauthorizedException;
+import com.campusmarketplace.server.mapper.TaskMapper;
 import com.campusmarketplace.server.repository.TaskRepository;
 import com.campusmarketplace.server.service.TaskService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
+    private final TaskMapper taskMapper;
 
     @Override
     public TaskResponse createTask(CreateTaskRequest request) {
@@ -44,7 +47,7 @@ public class TaskServiceImpl implements TaskService {
 
         Task savedTask = taskRepository.save(task);
 
-        return mapToResponse(savedTask);
+        return taskMapper.toResponse(savedTask);
     }
 
     @Override
@@ -52,7 +55,7 @@ public class TaskServiceImpl implements TaskService {
 
         return taskRepository.findAll()
                 .stream()
-                .map(this::mapToResponse)
+                .map(taskMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -62,7 +65,7 @@ public class TaskServiceImpl implements TaskService {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found"));
 
-        return mapToResponse(task);
+        return taskMapper.toResponse(task);
     }
 
     @Override
@@ -89,7 +92,7 @@ public class TaskServiceImpl implements TaskService {
 
         Task updatedTask = taskRepository.save(task);
 
-        return mapToResponse(updatedTask);
+        return taskMapper.toResponse(updatedTask);
     }
 
     @Override
@@ -111,18 +114,51 @@ public class TaskServiceImpl implements TaskService {
         taskRepository.delete(task);
     }
 
-    private TaskResponse mapToResponse(Task task) {
+    @Override
+    public List<TaskResponse> getMyTasks() {
 
-        return TaskResponse.builder()
-                .id(task.getId())
-                .title(task.getTitle())
-                .description(task.getDescription())
-                .budget(task.getBudget())
-                .category(task.getCategory())
-                .location(task.getLocation())
-                .status(task.getStatus())
-                .createdBy(task.getCreatedBy())
-                .createdAt(task.getCreatedAt())
-                .build();
+        Authentication authentication = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        String currentUser = authentication.getName();
+
+        return taskRepository.findByCreatedBy(currentUser)
+                .stream()
+                .map(taskMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<TaskResponse> exploreTasks(
+            String search,
+            String category,
+            Double minBudget,
+            Double maxBudget,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
+
+        Authentication authentication = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        String currentUser = authentication.getName();
+
+        Page<Task> taskPage = taskRepository.exploreTasks(
+                currentUser,
+                search,
+                category,
+                minBudget,
+                maxBudget,
+                page,
+                size,
+                sortBy,
+                direction
+        );
+
+        return taskPage.map(taskMapper::toResponse);
     }
 }

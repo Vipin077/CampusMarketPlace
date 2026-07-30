@@ -1,0 +1,4 @@
+/* Minimal dashboard styles */
+.dashboard-page { display: flex; }
+.cm-sidebar { width: 200px; }
+.main-area { flex: 1; padding: 16px; }
