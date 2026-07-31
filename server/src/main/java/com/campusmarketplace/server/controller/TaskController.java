@@ -25,6 +25,10 @@ public class TaskController {
 
     private final TaskService taskService;
 
+    // =========================================================
+    // CREATE TASK
+    // =========================================================
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TaskResponse> createTask(
 
@@ -42,15 +46,35 @@ public class TaskController {
         );
     }
 
+    // =========================================================
+    // GET ALL TASKS
+    // =========================================================
+
     @GetMapping
     public ResponseEntity<List<TaskResponse>> getAllTasks() {
-        return ResponseEntity.ok(taskService.getAllTasks());
+
+        return ResponseEntity.ok(
+                taskService.getAllTasks()
+        );
     }
 
+    // =========================================================
+    // GET TASK BY ID
+    // =========================================================
+
     @GetMapping("/{id}")
-    public ResponseEntity<TaskResponse> getTaskById(@PathVariable String id) {
-        return ResponseEntity.ok(taskService.getTaskById(id));
+    public ResponseEntity<TaskResponse> getTaskById(
+            @PathVariable String id
+    ) {
+
+        return ResponseEntity.ok(
+                taskService.getTaskById(id)
+        );
     }
+
+    // =========================================================
+    // DOWNLOAD ORIGINAL TASK ATTACHMENT
+    // =========================================================
 
     @GetMapping(
             value = "/{id}/attachment",
@@ -66,10 +90,39 @@ public class TaskController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + resource.getFilename() + "\""
+                        "attachment; filename=\"" +
+                                resource.getFilename() + "\""
                 )
                 .body(resource);
     }
+
+    // =========================================================
+    // DOWNLOAD SUBMITTED PROOF
+    // =========================================================
+
+    @GetMapping(
+            value = "/{id}/proof",
+            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
+    )
+    public ResponseEntity<Resource> downloadProof(
+            @PathVariable String id
+    ) {
+
+        Resource resource = taskService.downloadProof(id);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" +
+                                resource.getFilename() + "\""
+                )
+                .body(resource);
+    }
+
+    // =========================================================
+    // UPDATE TASK
+    // =========================================================
 
     @PutMapping(
             value = "/{id}",
@@ -90,12 +143,23 @@ public class TaskController {
         ObjectMapper mapper = new ObjectMapper();
 
         CreateTaskRequest request =
-                mapper.readValue(taskJson, CreateTaskRequest.class);
+                mapper.readValue(
+                        taskJson,
+                        CreateTaskRequest.class
+                );
 
         return ResponseEntity.ok(
-                taskService.updateTask(id, request, attachment)
+                taskService.updateTask(
+                        id,
+                        request,
+                        attachment
+                )
         );
     }
+
+    // =========================================================
+    // ACCEPT TASK
+    // =========================================================
 
     @PostMapping("/{id}/accept")
     public ResponseEntity<TaskResponse> acceptTask(
@@ -107,7 +171,10 @@ public class TaskController {
         );
     }
 
-    // NEW
+    // =========================================================
+    // GET TASKS ACCEPTED BY CURRENT USER
+    // =========================================================
+
     @GetMapping("/accepted")
     public ResponseEntity<List<TaskResponse>> getAcceptedTasks() {
 
@@ -116,37 +183,121 @@ public class TaskController {
         );
     }
 
+    // =========================================================
+    // SUBMIT COMPLETED WORK
+    // =========================================================
+
+    @PostMapping(
+            value = "/{id}/submit-work",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<TaskResponse> submitWork(
+
+            @PathVariable String id,
+
+            @RequestPart("completionMessage")
+            String completionMessage,
+
+            @RequestPart(value = "proof", required = false)
+            MultipartFile proof
+
+    ) throws IOException {
+
+        return ResponseEntity.ok(
+                taskService.submitWork(
+                        id,
+                        completionMessage,
+                        proof
+                )
+        );
+    }
+
+    // =========================================================
+    // APPROVE SUBMITTED WORK
+    // =========================================================
+
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<TaskResponse> approveTask(
+            @PathVariable String id
+    ) {
+
+        return ResponseEntity.ok(
+                taskService.approveTask(id)
+        );
+    }
+
+    // =========================================================
+    // REJECT SUBMITTED WORK
+    // =========================================================
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<TaskResponse> rejectTask(
+            @PathVariable String id
+    ) {
+
+        return ResponseEntity.ok(
+                taskService.rejectTask(id)
+        );
+    }
+
+    // =========================================================
+    // DELETE TASK
+    // =========================================================
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteTask(@PathVariable String id) {
+    public ResponseEntity<String> deleteTask(
+            @PathVariable String id
+    ) {
 
         taskService.deleteTask(id);
 
-        return ResponseEntity.ok("Task deleted successfully");
+        return ResponseEntity.ok(
+                "Task deleted successfully"
+        );
     }
+
+    // =========================================================
+    // GET MY CREATED TASKS
+    // =========================================================
 
     @GetMapping("/my")
     public ResponseEntity<List<TaskResponse>> getMyTasks() {
-        return ResponseEntity.ok(taskService.getMyTasks());
+
+        return ResponseEntity.ok(
+                taskService.getMyTasks()
+        );
     }
+
+    // =========================================================
+    // EXPLORE TASKS
+    // =========================================================
 
     @GetMapping("/explore")
     public ResponseEntity<Page<TaskResponse>> exploreTasks(
 
-            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "")
+            String search,
 
-            @RequestParam(defaultValue = "") String category,
+            @RequestParam(defaultValue = "")
+            String category,
 
-            @RequestParam(required = false) Double minBudget,
+            @RequestParam(required = false)
+            Double minBudget,
 
-            @RequestParam(required = false) Double maxBudget,
+            @RequestParam(required = false)
+            Double maxBudget,
 
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "0")
+            int page,
 
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "10")
+            int size,
 
-            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "createdAt")
+            String sortBy,
 
-            @RequestParam(defaultValue = "desc") String direction
+            @RequestParam(defaultValue = "desc")
+            String direction
     ) {
 
         return ResponseEntity.ok(

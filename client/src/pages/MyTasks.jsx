@@ -61,6 +61,7 @@ export default function MyTasks() {
                 key={task.id}
                 task={task}
                 showActions={true}
+                showProfile={false}
                 onDelete={handleDelete}
               />
             ))}

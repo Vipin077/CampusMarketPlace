@@ -19,12 +19,21 @@ public class TaskMapper {
                 .status(task.getStatus())
                 .createdBy(task.getCreatedBy())
 
-               
+                // User who accepted the task
                 .assignedTo(task.getAssignedTo())
                 .acceptedAt(task.getAcceptedAt())
 
+                // Original attachment
                 .attachmentUrl(task.getAttachmentUrl())
+
+                // Submission details
+                .proofUrl(task.getProofUrl())
+                .completionMessage(task.getCompletionMessage())
+                .submittedAt(task.getSubmittedAt())
+
+                // Task creation time
                 .createdAt(task.getCreatedAt())
+
                 .build();
     }
 }

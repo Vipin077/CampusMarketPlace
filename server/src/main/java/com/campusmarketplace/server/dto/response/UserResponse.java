@@ -1,34 +1,41 @@
 package com.campusmarketplace.server.dto.response;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UserResponse {
-    private Long id;
-    private String username;
+
+    private String id;
+
+    private String fullName;
+
     private String email;
 
-    public UserResponse() {
-    }
+    private String role;
 
-    public Long getId() {
-        return id;
-    }
+    // Profile
+    private String profilePicture;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    private String bio;
 
-    public String getUsername() {
-        return username;
-    }
+    private String department;
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    private String year;
 
-    public String getEmail() {
-        return email;
-    }
+    // Marketplace Stats
+    private Double rating;
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    private Integer completedTasks;
+
+    private Integer activeTasks;
+
+    private String joinedAt;
 }

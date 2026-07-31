@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 export default function TaskCard({
   task,
   showActions = false,
+  showProfile = true,
   onDelete,
+  onViewProfile,
 }) {
   const navigate = useNavigate();
 
@@ -31,13 +33,22 @@ export default function TaskCard({
         <span>📌 {task.status}</span>
       </div>
 
-      <div className="mt-5 flex gap-3">
+      <div className="mt-5 flex gap-3 flex-wrap">
         <button
           onClick={() => navigate(`/task/${task.id}`)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
         >
           View
         </button>
+
+        {showProfile && (
+          <button
+            onClick={() => onViewProfile?.(task.createdBy)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg"
+          >
+            View Profile
+          </button>
+        )}
 
         {showActions && (
           <>

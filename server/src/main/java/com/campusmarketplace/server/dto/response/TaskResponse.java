@@ -25,17 +25,33 @@ public class TaskResponse {
 
     private String location;
 
+    // OPEN, IN_PROGRESS, SUBMITTED, COMPLETED
     private String status;
 
+    // Task creator email
     private String createdBy;
 
-   
+    // Task creator profile
+    private UserResponse owner;
+
+    // User who accepted the task
     private String assignedTo;
 
-    
+    // Time when task was accepted
     private LocalDateTime acceptedAt;
 
+    // Original task attachment
     private String attachmentUrl;
 
+    // Proof uploaded after completing the task
+    private String proofUrl;
+
+    // Completion message submitted by the assignee
+    private String completionMessage;
+
+    // Time when work was submitted
+    private LocalDateTime submittedAt;
+
+    // Task creation time
     private LocalDateTime createdAt;
 }

@@ -8,6 +8,8 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
+
 @Document(collection = "users")
 @Getter
 @Setter
@@ -26,4 +28,26 @@ public class User {
     private String password;
 
     private String role;
+
+    // Profile
+    private String profilePicture;
+
+    private String bio;
+
+    private String department;
+
+    private String year;
+
+    // Marketplace Stats
+    @Builder.Default
+    private Double rating = 0.0;
+
+    @Builder.Default
+    private Integer completedTasks = 0;
+
+    @Builder.Default
+    private Integer activeTasks = 0;
+
+    @Builder.Default
+    private LocalDateTime joinedAt = LocalDateTime.now();
 }

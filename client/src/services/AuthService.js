@@ -13,14 +13,24 @@ const AuthService = {
 
   saveAuth(data) {
     localStorage.setItem("token", data.token);
+
+    if (data.user) {
+      localStorage.setItem("user", JSON.stringify(data.user));
+    }
   },
 
   logout() {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
   },
 
   getToken() {
     return localStorage.getItem("token");
+  },
+
+  getUser() {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
   },
 
   isAuthenticated() {

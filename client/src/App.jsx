@@ -14,18 +14,37 @@ import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import Leaderboard from "./pages/Leaderboard";
+import SubmitWork from "./pages/SubmitWork";
 
 import PrivateRoute from "./components/auth/PrivateRoute";
 
 function App() {
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Register />} />
 
-      {/* Protected Routes */}
+      {/* =====================================================
+          PUBLIC ROUTES
+      ===================================================== */}
+
+      <Route
+        path="/"
+        element={<Landing />}
+      />
+
+      <Route
+        path="/login"
+        element={<Login />}
+      />
+
+      <Route
+        path="/signup"
+        element={<Register />}
+      />
+
+      {/* =====================================================
+          DASHBOARD
+      ===================================================== */}
+
       <Route
         path="/dashboard"
         element={
@@ -34,6 +53,10 @@ function App() {
           </PrivateRoute>
         }
       />
+
+      {/* =====================================================
+          TASK ROUTES
+      ===================================================== */}
 
       <Route
         path="/create-task"
@@ -90,6 +113,20 @@ function App() {
       />
 
       <Route
+        path="/submit-work/:id"
+        element={
+          <PrivateRoute>
+            <SubmitWork />
+          </PrivateRoute>
+        }
+      />
+
+      {/* =====================================================
+          PROFILE ROUTES
+      ===================================================== */}
+
+      {/* Logged-in user's own profile */}
+      <Route
         path="/profile"
         element={
           <PrivateRoute>
@@ -97,6 +134,20 @@ function App() {
           </PrivateRoute>
         }
       />
+
+      {/* View another user's profile */}
+      <Route
+        path="/profile/:id"
+        element={
+          <PrivateRoute>
+            <Profile />
+          </PrivateRoute>
+        }
+      />
+
+      {/* =====================================================
+          MESSAGES
+      ===================================================== */}
 
       <Route
         path="/messages"
@@ -107,6 +158,10 @@ function App() {
         }
       />
 
+      {/* =====================================================
+          NOTIFICATIONS
+      ===================================================== */}
+
       <Route
         path="/notifications"
         element={
@@ -115,6 +170,10 @@ function App() {
           </PrivateRoute>
         }
       />
+
+      {/* =====================================================
+          LEADERBOARD
+      ===================================================== */}
 
       <Route
         path="/leaderboard"
@@ -125,7 +184,20 @@ function App() {
         }
       />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* =====================================================
+          FALLBACK
+      ===================================================== */}
+
+      <Route
+        path="*"
+        element={
+          <Navigate
+            to="/"
+            replace
+          />
+        }
+      />
+
     </Routes>
   );
 }

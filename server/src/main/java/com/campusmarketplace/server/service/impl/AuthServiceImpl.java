@@ -10,6 +10,7 @@ import com.campusmarketplace.server.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.campusmarketplace.server.mapper.UserMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final UserMapper userMapper;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -36,11 +38,12 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
 
         String token = jwtService.generateToken(user.getEmail());
-
+    
         return AuthResponse.builder()
-                .token(token)
-                .message("Registration Successful")
-                .build();
+        .token(token)
+        .message("Registration Successful")
+        .user(userMapper.toResponse(user))
+        .build();
     }
 
     @Override
@@ -55,9 +58,10 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtService.generateToken(user.getEmail());
 
-        return AuthResponse.builder()
-                .token(token)
-                .message("Login Successful")
-                .build();
+       return AuthResponse.builder()
+        .token(token)
+        .message("Login Successful")
+        .user(userMapper.toResponse(user))
+        .build();
     }
 }

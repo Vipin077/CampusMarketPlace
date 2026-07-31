@@ -43,6 +43,14 @@ public class Task {
 
     // Original task attachment
     private String attachmentUrl;
+    // Proof uploaded after completing the task
+    private String proofUrl;
+
+    // Message submitted along with proof
+    private String completionMessage;
+
+    // Time when work was submitted
+    private LocalDateTime submittedAt;
 
     // Task creation time
     private LocalDateTime createdAt;

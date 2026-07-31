@@ -13,91 +13,189 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Repository
 @RequiredArgsConstructor
-public class TaskCustomRepositoryImpl implements TaskCustomRepository {
+public class TaskCustomRepositoryImpl
+        implements TaskCustomRepository {
 
     private final MongoTemplate mongoTemplate;
 
-   @Override
-public Page<Task> exploreTasks(
-        String createdBy,
-        String search,
-        String category,
-        Double minBudget,
-        Double maxBudget,
-        int page,
-        int size,
-        String sortBy,
-        String direction
-) {
+    @Override
+    public Page<Task> exploreTasks(
+            String createdBy,
+            String search,
+            String category,
+            Double minBudget,
+            Double maxBudget,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
 
         Query query = new Query();
+
         List<Criteria> criteriaList = new ArrayList<>();
 
-        // Search by title, description and location
-        if (search != null && !search.isBlank()) {
-            String regex = ".*" + search.trim() + ".*";
+        // =====================================================
+        // EXCLUDE CURRENT USER'S OWN TASKS
+        // =====================================================
 
-            criteriaList.add(new Criteria().orOperator(
-                    Criteria.where("title").regex(regex, "i"),
-                    Criteria.where("description").regex(regex, "i"),
-                    Criteria.where("location").regex(regex, "i")
-            ));
-        }
-
-        // Category filter
-        if (category != null && !category.isBlank()) {
-            criteriaList.add(Criteria.where("category").is(category));
-        }
-
-        // Minimum budget filter
-        if (minBudget != null) {
-            criteriaList.add(Criteria.where("budget").gte(minBudget));
-        }
-
-        // Maximum budget filter
-        if (maxBudget != null) {
-            criteriaList.add(Criteria.where("budget").lte(maxBudget));
-        }
-
-        // Combine all filters
-        if (!criteriaList.isEmpty()) {
-            query.addCriteria(
-                    new Criteria().andOperator(criteriaList.toArray(new Criteria[0]))
+        if (createdBy != null && !createdBy.isBlank()) {
+            criteriaList.add(
+                    Criteria.where("createdBy").ne(createdBy)
             );
         }
 
-        // Sorting
+        // =====================================================
+        // SEARCH
+        // =====================================================
+
+        if (search != null && !search.isBlank()) {
+
+            String safeSearch =
+                    Pattern.quote(search.trim());
+
+            criteriaList.add(
+                    new Criteria().orOperator(
+
+                            Criteria.where("title")
+                                    .regex(safeSearch, "i"),
+
+                            Criteria.where("description")
+                                    .regex(safeSearch, "i"),
+
+                            Criteria.where("location")
+                                    .regex(safeSearch, "i"),
+
+                            Criteria.where("category")
+                                    .regex(safeSearch, "i")
+                    )
+            );
+        }
+
+        // =====================================================
+        // CATEGORY FILTER
+        // =====================================================
+
+        if (category != null && !category.isBlank()) {
+
+            criteriaList.add(
+                    Criteria.where("category")
+                            .regex(
+                                    "^" +
+                                            Pattern.quote(
+                                                    category.trim()
+                                            ) +
+                                            "$",
+                                    "i"
+                            )
+            );
+        }
+
+        // =====================================================
+        // MINIMUM BUDGET
+        // =====================================================
+
+        if (minBudget != null) {
+            criteriaList.add(
+                    Criteria.where("budget")
+                            .gte(minBudget)
+            );
+        }
+
+        // =====================================================
+        // MAXIMUM BUDGET
+        // =====================================================
+
+        if (maxBudget != null) {
+            criteriaList.add(
+                    Criteria.where("budget")
+                            .lte(maxBudget)
+            );
+        }
+
+        // =====================================================
+        // COMBINE FILTERS
+        // =====================================================
+
+        if (!criteriaList.isEmpty()) {
+
+            query.addCriteria(
+                    new Criteria().andOperator(
+                            criteriaList.toArray(
+                                    new Criteria[0]
+                            )
+                    )
+            );
+        }
+
+        // =====================================================
+        // SORTING
+        // =====================================================
+
         Sort.Direction sortDirection =
-                "desc".equalsIgnoreCase(direction)
-                        ? Sort.Direction.DESC
-                        : Sort.Direction.ASC;
+                "asc".equalsIgnoreCase(direction)
+                        ? Sort.Direction.ASC
+                        : Sort.Direction.DESC;
 
         String sortField =
-                (sortBy == null || sortBy.isBlank())
+                sortBy == null || sortBy.isBlank()
                         ? "createdAt"
                         : sortBy;
 
-        query.with(Sort.by(sortDirection, sortField));
+        query.with(
+                Sort.by(
+                        sortDirection,
+                        sortField
+                )
+        );
 
-        // Pagination
+        // =====================================================
+        // TOTAL COUNT BEFORE PAGINATION
+        // =====================================================
+
+        long total =
+                mongoTemplate.count(
+                        Query.of(query)
+                                .limit(-1)
+                                .skip(-1),
+                        Task.class
+                );
+
+        // =====================================================
+        // PAGINATION
+        // =====================================================
+
         query.skip((long) page * size);
         query.limit(size);
 
-        // Total records
-        long total = mongoTemplate.count(
-                Query.of(query).limit(-1).skip(-1),
-                Task.class
-        );
+        // =====================================================
+        // FETCH TASKS
+        // =====================================================
 
-        // Fetch data
-        List<Task> tasks = mongoTemplate.find(query, Task.class);
+        List<Task> tasks =
+                mongoTemplate.find(
+                        query,
+                        Task.class
+                );
+
+        // =====================================================
+        // RETURN PAGE
+        // =====================================================
 
         return new PageImpl<>(
                 tasks,
-                PageRequest.of(page, size),
+                PageRequest.of(
+                        page,
+                        size,
+                        Sort.by(
+                                sortDirection,
+                                sortField
+                        )
+                ),
                 total
         );
     }

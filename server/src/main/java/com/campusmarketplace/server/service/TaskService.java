@@ -16,7 +16,11 @@ public interface TaskService {
             MultipartFile attachment
     );
 
+    // Download original task attachment
     Resource downloadAttachment(String taskId);
+
+    // Download submitted work proof
+    Resource downloadProof(String taskId);
 
     List<TaskResponse> getAllTasks();
 
@@ -31,13 +35,29 @@ public interface TaskService {
     // Accept a task
     TaskResponse acceptTask(String taskId);
 
-    // NEW - Tasks accepted by current user
+    // Tasks accepted by current user
     List<TaskResponse> getAcceptedTasks();
 
+    // Submit completed work
+    TaskResponse submitWork(
+            String taskId,
+            String completionMessage,
+            MultipartFile proof
+    ) throws IOException;
+
+    // Approve submitted work
+    TaskResponse approveTask(String taskId);
+
+    // Reject submitted work
+    TaskResponse rejectTask(String taskId);
+
+    // Delete task
     void deleteTask(String id);
 
+    // Tasks created by current user
     List<TaskResponse> getMyTasks();
 
+    // Explore available tasks
     Page<TaskResponse> exploreTasks(
             String search,
             String category,
