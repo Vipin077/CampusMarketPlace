@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   LayoutDashboard,
   PlusSquare,
@@ -9,9 +11,13 @@ import {
   LogOut,
 } from "lucide-react";
 
-import { NavLink, useNavigate } from "react-router-dom";
+import {
+  NavLink,
+  useNavigate,
+} from "react-router-dom";
 
 import AuthService from "../../services/AuthService";
+import MessageService from "../../services/MessageService";
 
 const menu = [
   {
@@ -49,11 +55,74 @@ const menu = [
 export default function Sidebar() {
   const navigate = useNavigate();
 
+  const [unreadMessages, setUnreadMessages] =
+    useState(0);
+
   // =========================================================
   // CURRENT USER
   // =========================================================
 
   const user = AuthService.getUser();
+
+  // =========================================================
+  // LOAD UNREAD MESSAGE COUNT
+  // =========================================================
+
+  async function loadUnreadMessages() {
+    try {
+      const count =
+        await MessageService.getUnreadCount();
+
+      setUnreadMessages(
+        Number(count) || 0
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load unread message count:",
+        error
+      );
+    }
+  }
+
+  // =========================================================
+  // INITIAL LOAD + MESSAGE EVENTS
+  // =========================================================
+
+  useEffect(() => {
+    loadUnreadMessages();
+
+    // Conversation was opened/read
+    const handleMessagesRead = () => {
+      loadUnreadMessages();
+    };
+
+    // New unread message received
+    const handleMessagesUpdated = () => {
+      loadUnreadMessages();
+    };
+
+    window.addEventListener(
+      "messages-read",
+      handleMessagesRead
+    );
+
+    window.addEventListener(
+      "messages-updated",
+      handleMessagesUpdated
+    );
+
+    return () => {
+      window.removeEventListener(
+        "messages-read",
+        handleMessagesRead
+      );
+
+      window.removeEventListener(
+        "messages-updated",
+        handleMessagesUpdated
+      );
+    };
+  }, []);
 
   // =========================================================
   // PROFILE
@@ -63,7 +132,9 @@ export default function Sidebar() {
     if (user?.id) {
       navigate(`/profile/${user.id}`);
     } else {
-      console.error("User ID not found");
+      console.error(
+        "User ID not found"
+      );
 
       alert(
         "Unable to open profile. Please login again."
@@ -82,6 +153,10 @@ export default function Sidebar() {
       replace: true,
     });
   };
+
+  // =========================================================
+  // UI
+  // =========================================================
 
   return (
     <aside className="w-64 h-screen sticky top-0 shrink-0 bg-slate-900 text-white flex flex-col">
@@ -128,6 +203,23 @@ export default function Sidebar() {
               <span>
                 {item.name}
               </span>
+
+              {/* =============================================
+                  UNREAD MESSAGE BADGE
+              ============================================= */}
+
+              {item.name === "Messages" &&
+                unreadMessages > 0 && (
+
+                  <span className="ml-auto min-w-6 h-6 px-1.5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
+
+                    {unreadMessages > 99
+                      ? "99+"
+                      : unreadMessages}
+
+                  </span>
+
+                )}
 
             </NavLink>
           );

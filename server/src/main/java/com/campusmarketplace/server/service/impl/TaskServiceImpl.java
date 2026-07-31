@@ -82,16 +82,16 @@ public class TaskServiceImpl implements TaskService {
                         new TaskNotFoundException("Task not found")
                 );
 
-        if (task.getAttachmentUrl() == null) {
-            throw new RuntimeException("No attachment found");
+        if (task.getAttachmentUrl() == null ||
+                task.getAttachmentUrl().isBlank()) {
+
+            throw new RuntimeException(
+                    "No attachment found"
+            );
         }
 
-        String fileName = fileStorageService.getFileName(
-                task.getAttachmentUrl()
-        );
-
         return fileStorageService.load(
-                fileName,
+                task.getAttachmentUrl(),
                 "task-files"
         );
     }
@@ -108,8 +108,12 @@ public class TaskServiceImpl implements TaskService {
                         new TaskNotFoundException("Task not found")
                 );
 
-        if (task.getProofUrl() == null) {
-            throw new RuntimeException("No proof found");
+        if (task.getProofUrl() == null ||
+                task.getProofUrl().isBlank()) {
+
+            throw new RuntimeException(
+                    "No proof found"
+            );
         }
 
         Authentication authentication = SecurityContextHolder
@@ -129,17 +133,14 @@ public class TaskServiceImpl implements TaskService {
 
         // Other users cannot access proof
         if (!isOwner && !isAssignedUser) {
+
             throw new UnauthorizedException(
                     "You are not authorized to access this proof"
             );
         }
 
-        String fileName = fileStorageService.getFileName(
-                task.getProofUrl()
-        );
-
         return fileStorageService.load(
-                fileName,
+                task.getProofUrl(),
                 "task-proofs"
         );
     }
@@ -195,6 +196,7 @@ public class TaskServiceImpl implements TaskService {
         String currentUser = authentication.getName();
 
         if (!task.getCreatedBy().equals(currentUser)) {
+
             throw new UnauthorizedException(
                     "You are not authorized to update this task"
             );
@@ -209,31 +211,34 @@ public class TaskServiceImpl implements TaskService {
         // Replace attachment only if a new one is uploaded
         if (attachment != null && !attachment.isEmpty()) {
 
-            // Delete old attachment
-            if (task.getAttachmentUrl() != null) {
-
-                String oldFileName = fileStorageService.getFileName(
-                        task.getAttachmentUrl()
-                );
+            // Delete old Cloudinary attachment
+            if (task.getAttachmentUrl() != null &&
+                    !task.getAttachmentUrl().isBlank()) {
 
                 fileStorageService.delete(
-                        oldFileName,
+                        task.getAttachmentUrl(),
                         "task-files"
                 );
             }
 
-            // Upload new attachment
-            String newAttachmentUrl = fileStorageService.store(
-                    attachment,
-                    "task-files"
-            );
+            // Upload new attachment to Cloudinary
+            String newAttachmentUrl =
+                    fileStorageService.store(
+                            attachment,
+                            "task-files"
+                    );
 
-            task.setAttachmentUrl(newAttachmentUrl);
+            task.setAttachmentUrl(
+                    newAttachmentUrl
+            );
         }
 
-        Task updatedTask = taskRepository.save(task);
+        Task updatedTask =
+                taskRepository.save(task);
 
-        return taskMapper.toResponse(updatedTask);
+        return taskMapper.toResponse(
+                updatedTask
+        );
     }
 
     // =========================================================
@@ -256,6 +261,7 @@ public class TaskServiceImpl implements TaskService {
 
         // Owner cannot accept own task
         if (task.getCreatedBy().equals(currentUser)) {
+
             throw new UnauthorizedException(
                     "You cannot accept your own task"
             );
@@ -263,6 +269,7 @@ public class TaskServiceImpl implements TaskService {
 
         // Task must be OPEN
         if (!"OPEN".equals(task.getStatus())) {
+
             throw new RuntimeException(
                     "Task has already been accepted"
             );
@@ -272,19 +279,24 @@ public class TaskServiceImpl implements TaskService {
         task.setAcceptedAt(LocalDateTime.now());
         task.setStatus("IN_PROGRESS");
 
-        Task updatedTask = taskRepository.save(task);
+        Task updatedTask =
+                taskRepository.save(task);
 
         // Notify task owner
         notificationService.createNotification(
                 task.getCreatedBy(),
                 "ACCEPTED",
                 "Task Accepted",
-                currentUser + " accepted your task \"" +
-                        task.getTitle() + "\".",
+                currentUser +
+                        " accepted your task \"" +
+                        task.getTitle() +
+                        "\".",
                 task.getId()
         );
 
-        return taskMapper.toResponse(updatedTask);
+        return taskMapper.toResponse(
+                updatedTask
+        );
     }
 
     // =========================================================
@@ -294,13 +306,16 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskResponse> getAcceptedTasks() {
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
-        String currentUser = authentication.getName();
+        String currentUser =
+                authentication.getName();
 
-        return taskRepository.findByAssignedTo(currentUser)
+        return taskRepository
+                .findByAssignedTo(currentUser)
                 .stream()
                 .map(taskMapper::toResponse)
                 .collect(Collectors.toList());
@@ -322,15 +337,18 @@ public class TaskServiceImpl implements TaskService {
                         new TaskNotFoundException("Task not found")
                 );
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
-        String currentUser = authentication.getName();
+        String currentUser =
+                authentication.getName();
 
         // Only assigned user can submit work
         if (task.getAssignedTo() == null ||
-                !task.getAssignedTo().equals(currentUser)) {
+                !task.getAssignedTo()
+                        .equals(currentUser)) {
 
             throw new UnauthorizedException(
                     "You are not assigned to this task"
@@ -338,40 +356,55 @@ public class TaskServiceImpl implements TaskService {
         }
 
         // Task must be IN_PROGRESS
-        if (!"IN_PROGRESS".equals(task.getStatus())) {
+        if (!"IN_PROGRESS".equals(
+                task.getStatus()
+        )) {
+
             throw new RuntimeException(
                     "Task is not in progress"
             );
         }
 
-        // Upload proof if provided
+        // Upload proof to Cloudinary if provided
         if (proof != null && !proof.isEmpty()) {
 
-            String proofUrl = fileStorageService.store(
-                    proof,
-                    "task-proofs"
-            );
+            String proofUrl =
+                    fileStorageService.store(
+                            proof,
+                            "task-proofs"
+                    );
 
             task.setProofUrl(proofUrl);
         }
 
-        task.setCompletionMessage(completionMessage);
-        task.setSubmittedAt(LocalDateTime.now());
+        task.setCompletionMessage(
+                completionMessage
+        );
+
+        task.setSubmittedAt(
+                LocalDateTime.now()
+        );
+
         task.setStatus("SUBMITTED");
 
-        Task updatedTask = taskRepository.save(task);
+        Task updatedTask =
+                taskRepository.save(task);
 
         // Notify task owner
         notificationService.createNotification(
                 task.getCreatedBy(),
                 "SUBMITTED",
                 "Work Submitted",
-                currentUser + " submitted work for \"" +
-                        task.getTitle() + "\".",
+                currentUser +
+                        " submitted work for \"" +
+                        task.getTitle() +
+                        "\".",
                 task.getId()
         );
 
-        return taskMapper.toResponse(updatedTask);
+        return taskMapper.toResponse(
+                updatedTask
+        );
     }
 
     // =========================================================
@@ -379,28 +412,37 @@ public class TaskServiceImpl implements TaskService {
     // =========================================================
 
     @Override
-    public TaskResponse approveTask(String taskId) {
+    public TaskResponse approveTask(
+            String taskId
+    ) {
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() ->
                         new TaskNotFoundException("Task not found")
                 );
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
-        String currentUser = authentication.getName();
+        String currentUser =
+                authentication.getName();
 
         // Only task creator can approve
-        if (!task.getCreatedBy().equals(currentUser)) {
+        if (!task.getCreatedBy()
+                .equals(currentUser)) {
+
             throw new UnauthorizedException(
                     "Only the task creator can approve submitted work"
             );
         }
 
         // Work must already be submitted
-        if (!"SUBMITTED".equals(task.getStatus())) {
+        if (!"SUBMITTED".equals(
+                task.getStatus()
+        )) {
+
             throw new RuntimeException(
                     "Task is not waiting for approval"
             );
@@ -408,7 +450,8 @@ public class TaskServiceImpl implements TaskService {
 
         task.setStatus("COMPLETED");
 
-        Task updatedTask = taskRepository.save(task);
+        Task updatedTask =
+                taskRepository.save(task);
 
         // Notify assigned worker
         if (task.getAssignedTo() != null) {
@@ -424,7 +467,9 @@ public class TaskServiceImpl implements TaskService {
             );
         }
 
-        return taskMapper.toResponse(updatedTask);
+        return taskMapper.toResponse(
+                updatedTask
+        );
     }
 
     // =========================================================
@@ -432,28 +477,37 @@ public class TaskServiceImpl implements TaskService {
     // =========================================================
 
     @Override
-    public TaskResponse rejectTask(String taskId) {
+    public TaskResponse rejectTask(
+            String taskId
+    ) {
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() ->
                         new TaskNotFoundException("Task not found")
                 );
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
-        String currentUser = authentication.getName();
+        String currentUser =
+                authentication.getName();
 
         // Only task creator can reject
-        if (!task.getCreatedBy().equals(currentUser)) {
+        if (!task.getCreatedBy()
+                .equals(currentUser)) {
+
             throw new UnauthorizedException(
                     "Only the task creator can reject submitted work"
             );
         }
 
         // Work must already be submitted
-        if (!"SUBMITTED".equals(task.getStatus())) {
+        if (!"SUBMITTED".equals(
+                task.getStatus()
+        )) {
+
             throw new RuntimeException(
                     "Task is not waiting for approval"
             );
@@ -462,7 +516,8 @@ public class TaskServiceImpl implements TaskService {
         // Send task back to worker
         task.setStatus("IN_PROGRESS");
 
-        Task updatedTask = taskRepository.save(task);
+        Task updatedTask =
+                taskRepository.save(task);
 
         // Notify assigned worker
         if (task.getAssignedTo() != null) {
@@ -473,12 +528,15 @@ public class TaskServiceImpl implements TaskService {
                     "Work Rejected",
                     "Your submitted work for \"" +
                             task.getTitle() +
-                            "\" was rejected. Please update and resubmit it.",
+                            "\" was rejected. " +
+                            "Please update and resubmit it.",
                     task.getId()
             );
         }
 
-        return taskMapper.toResponse(updatedTask);
+        return taskMapper.toResponse(
+                updatedTask
+        );
     }
 
     // =========================================================
@@ -493,27 +551,39 @@ public class TaskServiceImpl implements TaskService {
                         new TaskNotFoundException("Task not found")
                 );
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
-        String currentUser = authentication.getName();
+        String currentUser =
+                authentication.getName();
 
-        if (!task.getCreatedBy().equals(currentUser)) {
+        if (!task.getCreatedBy()
+                .equals(currentUser)) {
+
             throw new UnauthorizedException(
                     "You are not authorized to delete this task"
             );
         }
 
-        if (task.getAttachmentUrl() != null) {
-
-            String fileName = fileStorageService.getFileName(
-                    task.getAttachmentUrl()
-            );
+        // Delete task attachment from Cloudinary
+        if (task.getAttachmentUrl() != null &&
+                !task.getAttachmentUrl().isBlank()) {
 
             fileStorageService.delete(
-                    fileName,
+                    task.getAttachmentUrl(),
                     "task-files"
+            );
+        }
+
+        // Delete submitted proof from Cloudinary
+        if (task.getProofUrl() != null &&
+                !task.getProofUrl().isBlank()) {
+
+            fileStorageService.delete(
+                    task.getProofUrl(),
+                    "task-proofs"
             );
         }
 
@@ -527,13 +597,16 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskResponse> getMyTasks() {
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
-        String currentUser = authentication.getName();
+        String currentUser =
+                authentication.getName();
 
-        return taskRepository.findByCreatedBy(currentUser)
+        return taskRepository
+                .findByCreatedBy(currentUser)
                 .stream()
                 .map(taskMapper::toResponse)
                 .collect(Collectors.toList());
@@ -555,24 +628,29 @@ public class TaskServiceImpl implements TaskService {
             String direction
     ) {
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
-        String currentUser = authentication.getName();
+        String currentUser =
+                authentication.getName();
 
-        Page<Task> taskPage = taskRepository.exploreTasks(
-                currentUser,
-                search,
-                category,
-                minBudget,
-                maxBudget,
-                page,
-                size,
-                sortBy,
-                direction
+        Page<Task> taskPage =
+                taskRepository.exploreTasks(
+                        currentUser,
+                        search,
+                        category,
+                        minBudget,
+                        maxBudget,
+                        page,
+                        size,
+                        sortBy,
+                        direction
+                );
+
+        return taskPage.map(
+                taskMapper::toResponse
         );
-
-        return taskPage.map(taskMapper::toResponse);
     }
 }
