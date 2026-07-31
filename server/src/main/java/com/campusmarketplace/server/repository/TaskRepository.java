@@ -8,19 +8,62 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TaskRepository extends MongoRepository<Task, String>,
+public interface TaskRepository
+        extends MongoRepository<Task, String>,
         TaskCustomRepository {
 
-    List<Task> findByCreatedBy(String createdBy);
+    // =========================================================
+    // BASIC TASK QUERIES
+    // =========================================================
 
-    
-    List<Task> findByAssignedTo(String assignedTo);
+    List<Task> findByCreatedBy(
+            String createdBy
+    );
 
-    List<Task> findByCreatedByNot(String createdBy);
+    List<Task> findByAssignedTo(
+            String assignedTo
+    );
 
-    long countByCreatedBy(String createdBy);
+    List<Task> findByCreatedByNot(
+            String createdBy
+    );
 
-    long countByCreatedByAndStatus(String createdBy, String status);
+    // =========================================================
+    // CREATED TASK COUNTS
+    // =========================================================
 
-    List<Task> findTop5ByCreatedByOrderByCreatedAtDesc(String createdBy);
+    long countByCreatedBy(
+            String createdBy
+    );
+
+    long countByCreatedByAndStatus(
+            String createdBy,
+            String status
+    );
+
+    // =========================================================
+    // PROFILE STATS
+    // =========================================================
+
+    long countByAssignedToAndStatus(
+            String assignedTo,
+            String status
+    );
+
+    // =========================================================
+    // RATING
+    // =========================================================
+
+    List<Task> findByAssignedToAndStatusAndRatingIsNotNull(
+            String assignedTo,
+            String status
+    );
+
+    // =========================================================
+    // RECENT TASKS
+    // =========================================================
+
+    List<Task> findTop5ByCreatedByOrderByCreatedAtDesc(
+            String createdBy
+    );
 }

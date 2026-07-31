@@ -42,16 +42,18 @@ public class TaskServiceImpl implements TaskService {
             MultipartFile attachment
     ) {
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
         String email = authentication.getName();
 
-        String attachmentUrl = fileStorageService.store(
-                attachment,
-                "task-files"
-        );
+        String attachmentUrl =
+                fileStorageService.store(
+                        attachment,
+                        "task-files"
+                );
 
         Task task = Task.builder()
                 .title(request.getTitle())
@@ -65,7 +67,8 @@ public class TaskServiceImpl implements TaskService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        Task savedTask = taskRepository.save(task);
+        Task savedTask =
+                taskRepository.save(task);
 
         return taskMapper.toResponse(savedTask);
     }
@@ -75,11 +78,15 @@ public class TaskServiceImpl implements TaskService {
     // =========================================================
 
     @Override
-    public Resource downloadAttachment(String taskId) {
+    public Resource downloadAttachment(
+            String taskId
+    ) {
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() ->
-                        new TaskNotFoundException("Task not found")
+                        new TaskNotFoundException(
+                                "Task not found"
+                        )
                 );
 
         if (task.getAttachmentUrl() == null ||
@@ -101,11 +108,15 @@ public class TaskServiceImpl implements TaskService {
     // =========================================================
 
     @Override
-    public Resource downloadProof(String taskId) {
+    public Resource downloadProof(
+            String taskId
+    ) {
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() ->
-                        new TaskNotFoundException("Task not found")
+                        new TaskNotFoundException(
+                                "Task not found"
+                        )
                 );
 
         if (task.getProofUrl() == null ||
@@ -116,22 +127,23 @@ public class TaskServiceImpl implements TaskService {
             );
         }
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
-        String currentUser = authentication.getName();
+        String currentUser =
+                authentication.getName();
 
-        // Task creator can access the proof
         boolean isOwner =
-                task.getCreatedBy().equals(currentUser);
+                task.getCreatedBy()
+                        .equals(currentUser);
 
-        // Assigned worker can also access the proof
         boolean isAssignedUser =
                 task.getAssignedTo() != null &&
-                        task.getAssignedTo().equals(currentUser);
+                        task.getAssignedTo()
+                                .equals(currentUser);
 
-        // Other users cannot access proof
         if (!isOwner && !isAssignedUser) {
 
             throw new UnauthorizedException(
@@ -163,11 +175,15 @@ public class TaskServiceImpl implements TaskService {
     // =========================================================
 
     @Override
-    public TaskResponse getTaskById(String id) {
+    public TaskResponse getTaskById(
+            String id
+    ) {
 
         Task task = taskRepository.findById(id)
                 .orElseThrow(() ->
-                        new TaskNotFoundException("Task not found")
+                        new TaskNotFoundException(
+                                "Task not found"
+                        )
                 );
 
         return taskMapper.toResponse(task);
@@ -186,34 +202,53 @@ public class TaskServiceImpl implements TaskService {
 
         Task task = taskRepository.findById(id)
                 .orElseThrow(() ->
-                        new TaskNotFoundException("Task not found")
+                        new TaskNotFoundException(
+                                "Task not found"
+                        )
                 );
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
-        String currentUser = authentication.getName();
+        String currentUser =
+                authentication.getName();
 
-        if (!task.getCreatedBy().equals(currentUser)) {
+        if (!task.getCreatedBy()
+                .equals(currentUser)) {
 
             throw new UnauthorizedException(
                     "You are not authorized to update this task"
             );
         }
 
-        task.setTitle(request.getTitle());
-        task.setDescription(request.getDescription());
-        task.setBudget(request.getBudget());
-        task.setCategory(request.getCategory());
-        task.setLocation(request.getLocation());
+        task.setTitle(
+                request.getTitle()
+        );
 
-        // Replace attachment only if a new one is uploaded
-        if (attachment != null && !attachment.isEmpty()) {
+        task.setDescription(
+                request.getDescription()
+        );
 
-            // Delete old Cloudinary attachment
+        task.setBudget(
+                request.getBudget()
+        );
+
+        task.setCategory(
+                request.getCategory()
+        );
+
+        task.setLocation(
+                request.getLocation()
+        );
+
+        if (attachment != null &&
+                !attachment.isEmpty()) {
+
             if (task.getAttachmentUrl() != null &&
-                    !task.getAttachmentUrl().isBlank()) {
+                    !task.getAttachmentUrl()
+                            .isBlank()) {
 
                 fileStorageService.delete(
                         task.getAttachmentUrl(),
@@ -221,7 +256,6 @@ public class TaskServiceImpl implements TaskService {
                 );
             }
 
-            // Upload new attachment to Cloudinary
             String newAttachmentUrl =
                     fileStorageService.store(
                             attachment,
@@ -246,43 +280,57 @@ public class TaskServiceImpl implements TaskService {
     // =========================================================
 
     @Override
-    public TaskResponse acceptTask(String taskId) {
+    public TaskResponse acceptTask(
+            String taskId
+    ) {
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() ->
-                        new TaskNotFoundException("Task not found")
+                        new TaskNotFoundException(
+                                "Task not found"
+                        )
                 );
 
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
-        String currentUser = authentication.getName();
+        String currentUser =
+                authentication.getName();
 
-        // Owner cannot accept own task
-        if (task.getCreatedBy().equals(currentUser)) {
+        if (task.getCreatedBy()
+                .equals(currentUser)) {
 
             throw new UnauthorizedException(
                     "You cannot accept your own task"
             );
         }
 
-        // Task must be OPEN
-        if (!"OPEN".equals(task.getStatus())) {
+        if (!"OPEN".equals(
+                task.getStatus()
+        )) {
 
             throw new RuntimeException(
                     "Task has already been accepted"
             );
         }
 
-        task.setAssignedTo(currentUser);
-        task.setAcceptedAt(LocalDateTime.now());
-        task.setStatus("IN_PROGRESS");
+        task.setAssignedTo(
+                currentUser
+        );
+
+        task.setAcceptedAt(
+                LocalDateTime.now()
+        );
+
+        task.setStatus(
+                "IN_PROGRESS"
+        );
 
         Task updatedTask =
                 taskRepository.save(task);
 
-        // Notify task owner
         notificationService.createNotification(
                 task.getCreatedBy(),
                 "ACCEPTED",
@@ -334,7 +382,9 @@ public class TaskServiceImpl implements TaskService {
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() ->
-                        new TaskNotFoundException("Task not found")
+                        new TaskNotFoundException(
+                                "Task not found"
+                        )
                 );
 
         Authentication authentication =
@@ -345,7 +395,6 @@ public class TaskServiceImpl implements TaskService {
         String currentUser =
                 authentication.getName();
 
-        // Only assigned user can submit work
         if (task.getAssignedTo() == null ||
                 !task.getAssignedTo()
                         .equals(currentUser)) {
@@ -355,7 +404,6 @@ public class TaskServiceImpl implements TaskService {
             );
         }
 
-        // Task must be IN_PROGRESS
         if (!"IN_PROGRESS".equals(
                 task.getStatus()
         )) {
@@ -365,8 +413,8 @@ public class TaskServiceImpl implements TaskService {
             );
         }
 
-        // Upload proof to Cloudinary if provided
-        if (proof != null && !proof.isEmpty()) {
+        if (proof != null &&
+                !proof.isEmpty()) {
 
             String proofUrl =
                     fileStorageService.store(
@@ -374,7 +422,9 @@ public class TaskServiceImpl implements TaskService {
                             "task-proofs"
                     );
 
-            task.setProofUrl(proofUrl);
+            task.setProofUrl(
+                    proofUrl
+            );
         }
 
         task.setCompletionMessage(
@@ -385,12 +435,13 @@ public class TaskServiceImpl implements TaskService {
                 LocalDateTime.now()
         );
 
-        task.setStatus("SUBMITTED");
+        task.setStatus(
+                "SUBMITTED"
+        );
 
         Task updatedTask =
                 taskRepository.save(task);
 
-        // Notify task owner
         notificationService.createNotification(
                 task.getCreatedBy(),
                 "SUBMITTED",
@@ -418,7 +469,9 @@ public class TaskServiceImpl implements TaskService {
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() ->
-                        new TaskNotFoundException("Task not found")
+                        new TaskNotFoundException(
+                                "Task not found"
+                        )
                 );
 
         Authentication authentication =
@@ -429,7 +482,6 @@ public class TaskServiceImpl implements TaskService {
         String currentUser =
                 authentication.getName();
 
-        // Only task creator can approve
         if (!task.getCreatedBy()
                 .equals(currentUser)) {
 
@@ -438,7 +490,6 @@ public class TaskServiceImpl implements TaskService {
             );
         }
 
-        // Work must already be submitted
         if (!"SUBMITTED".equals(
                 task.getStatus()
         )) {
@@ -448,12 +499,13 @@ public class TaskServiceImpl implements TaskService {
             );
         }
 
-        task.setStatus("COMPLETED");
+        task.setStatus(
+                "COMPLETED"
+        );
 
         Task updatedTask =
                 taskRepository.save(task);
 
-        // Notify assigned worker
         if (task.getAssignedTo() != null) {
 
             notificationService.createNotification(
@@ -483,7 +535,9 @@ public class TaskServiceImpl implements TaskService {
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() ->
-                        new TaskNotFoundException("Task not found")
+                        new TaskNotFoundException(
+                                "Task not found"
+                        )
                 );
 
         Authentication authentication =
@@ -494,7 +548,6 @@ public class TaskServiceImpl implements TaskService {
         String currentUser =
                 authentication.getName();
 
-        // Only task creator can reject
         if (!task.getCreatedBy()
                 .equals(currentUser)) {
 
@@ -503,7 +556,6 @@ public class TaskServiceImpl implements TaskService {
             );
         }
 
-        // Work must already be submitted
         if (!"SUBMITTED".equals(
                 task.getStatus()
         )) {
@@ -513,13 +565,13 @@ public class TaskServiceImpl implements TaskService {
             );
         }
 
-        // Send task back to worker
-        task.setStatus("IN_PROGRESS");
+        task.setStatus(
+                "IN_PROGRESS"
+        );
 
         Task updatedTask =
                 taskRepository.save(task);
 
-        // Notify assigned worker
         if (task.getAssignedTo() != null) {
 
             notificationService.createNotification(
@@ -540,15 +592,135 @@ public class TaskServiceImpl implements TaskService {
     }
 
     // =========================================================
+    // RATE COMPLETED TASK
+    // =========================================================
+
+    @Override
+    public TaskResponse rateTask(
+            String taskId,
+            Integer rating,
+            String review
+    ) {
+
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() ->
+                        new TaskNotFoundException(
+                                "Task not found"
+                        )
+                );
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        String currentUser =
+                authentication.getName();
+
+        // Only task creator can rate the worker
+        if (!task.getCreatedBy()
+                .equals(currentUser)) {
+
+            throw new UnauthorizedException(
+                    "Only the task creator can rate this task"
+            );
+        }
+
+        // Task must be completed first
+        if (!"COMPLETED".equals(
+                task.getStatus()
+        )) {
+
+            throw new RuntimeException(
+                    "Task must be completed before rating"
+            );
+        }
+
+        // Task must have an assigned worker
+        if (task.getAssignedTo() == null ||
+                task.getAssignedTo()
+                        .isBlank()) {
+
+            throw new RuntimeException(
+                    "No worker is assigned to this task"
+            );
+        }
+
+        // Rating must be between 1 and 5
+        if (rating == null ||
+                rating < 1 ||
+                rating > 5) {
+
+            throw new IllegalArgumentException(
+                    "Rating must be between 1 and 5"
+            );
+        }
+
+        // Prevent duplicate rating
+        if (task.getRating() != null) {
+
+            throw new RuntimeException(
+                    "This task has already been rated"
+            );
+        }
+
+        task.setRating(
+                rating
+        );
+
+        if (review != null &&
+                !review.isBlank()) {
+
+            task.setReview(
+                    review.trim()
+            );
+
+        } else {
+
+            task.setReview(null);
+        }
+
+        task.setRatedAt(
+                LocalDateTime.now()
+        );
+
+        Task updatedTask =
+                taskRepository.save(task);
+
+        // Notify worker
+        notificationService.createNotification(
+                task.getAssignedTo(),
+                "RATED",
+                "You Received a Rating",
+                "You received " +
+                        rating +
+                        " star" +
+                        (rating == 1 ? "" : "s") +
+                        " for \"" +
+                        task.getTitle() +
+                        "\".",
+                task.getId()
+        );
+
+        return taskMapper.toResponse(
+                updatedTask
+        );
+    }
+
+    // =========================================================
     // DELETE TASK
     // =========================================================
 
     @Override
-    public void deleteTask(String id) {
+    public void deleteTask(
+            String id
+    ) {
 
         Task task = taskRepository.findById(id)
                 .orElseThrow(() ->
-                        new TaskNotFoundException("Task not found")
+                        new TaskNotFoundException(
+                                "Task not found"
+                        )
                 );
 
         Authentication authentication =
@@ -567,27 +739,57 @@ public class TaskServiceImpl implements TaskService {
             );
         }
 
-        // Delete task attachment from Cloudinary
+        // =====================================================
+        // DELETE ATTACHMENT FROM CLOUDINARY
+        // =====================================================
+
         if (task.getAttachmentUrl() != null &&
-                !task.getAttachmentUrl().isBlank()) {
+                !task.getAttachmentUrl()
+                        .isBlank()) {
 
-            fileStorageService.delete(
-                    task.getAttachmentUrl(),
-                    "task-files"
-            );
+            try {
+
+                fileStorageService.delete(
+                        task.getAttachmentUrl(),
+                        "task-files"
+                );
+
+            } catch (Exception e) {
+
+                System.err.println(
+                        "Failed to delete task attachment from Cloudinary: "
+                                + e.getMessage()
+                );
+            }
         }
 
-        // Delete submitted proof from Cloudinary
+        // =====================================================
+        // DELETE PROOF FROM CLOUDINARY
+        // =====================================================
+
         if (task.getProofUrl() != null &&
-                !task.getProofUrl().isBlank()) {
+                !task.getProofUrl()
+                        .isBlank()) {
 
-            fileStorageService.delete(
-                    task.getProofUrl(),
-                    "task-proofs"
-            );
+            try {
+
+                fileStorageService.delete(
+                        task.getProofUrl(),
+                        "task-proofs"
+                );
+
+            } catch (Exception e) {
+
+                System.err.println(
+                        "Failed to delete task proof from Cloudinary: "
+                                + e.getMessage()
+                );
+            }
         }
 
-        taskRepository.delete(task);
+        taskRepository.delete(
+                task
+        );
     }
 
     // =========================================================

@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -41,7 +42,10 @@ public class TaskController {
     ) {
 
         return new ResponseEntity<>(
-                taskService.createTask(request, attachment),
+                taskService.createTask(
+                        request,
+                        attachment
+                ),
                 HttpStatus.CREATED
         );
     }
@@ -84,14 +88,18 @@ public class TaskController {
             @PathVariable String id
     ) {
 
-        Resource resource = taskService.downloadAttachment(id);
+        Resource resource =
+                taskService.downloadAttachment(id);
 
         return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentType(
+                        MediaType.APPLICATION_OCTET_STREAM
+                )
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" +
-                                resource.getFilename() + "\""
+                                resource.getFilename() +
+                                "\""
                 )
                 .body(resource);
     }
@@ -108,14 +116,18 @@ public class TaskController {
             @PathVariable String id
     ) {
 
-        Resource resource = taskService.downloadProof(id);
+        Resource resource =
+                taskService.downloadProof(id);
 
         return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentType(
+                        MediaType.APPLICATION_OCTET_STREAM
+                )
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" +
-                                resource.getFilename() + "\""
+                                resource.getFilename() +
+                                "\""
                 )
                 .body(resource);
     }
@@ -135,12 +147,16 @@ public class TaskController {
             @RequestPart("task")
             String taskJson,
 
-            @RequestPart(value = "attachment", required = false)
+            @RequestPart(
+                    value = "attachment",
+                    required = false
+            )
             MultipartFile attachment
 
     ) throws IOException {
 
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper =
+                new ObjectMapper();
 
         CreateTaskRequest request =
                 mapper.readValue(
@@ -198,7 +214,10 @@ public class TaskController {
             @RequestPart("completionMessage")
             String completionMessage,
 
-            @RequestPart(value = "proof", required = false)
+            @RequestPart(
+                    value = "proof",
+                    required = false
+            )
             MultipartFile proof
 
     ) throws IOException {
@@ -237,6 +256,62 @@ public class TaskController {
 
         return ResponseEntity.ok(
                 taskService.rejectTask(id)
+        );
+    }
+
+    // =========================================================
+    // RATE COMPLETED TASK
+    // =========================================================
+
+    @PostMapping("/{id}/rate")
+    public ResponseEntity<TaskResponse> rateTask(
+
+            @PathVariable String id,
+
+            @RequestBody
+            Map<String, Object> request
+    ) {
+
+        Object ratingValue =
+                request.get("rating");
+
+        if (ratingValue == null) {
+
+            throw new IllegalArgumentException(
+                    "Rating is required"
+            );
+        }
+
+        Integer rating;
+
+        try {
+
+            rating =
+                    Integer.valueOf(
+                            ratingValue.toString()
+                    );
+
+        } catch (NumberFormatException e) {
+
+            throw new IllegalArgumentException(
+                    "Rating must be a number between 1 and 5"
+            );
+        }
+
+        Object reviewValue =
+                request.get("review");
+
+        String review =
+                reviewValue != null
+                        ? reviewValue.toString()
+                        : null;
+
+        return ResponseEntity.ok(
+                taskService.rateTask(
+                        id,
+                        rating,
+                        review
+                )
         );
     }
 

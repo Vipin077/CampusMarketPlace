@@ -11,10 +11,18 @@ import java.util.List;
 
 public interface TaskService {
 
+    // =========================================================
+    // CREATE TASK
+    // =========================================================
+
     TaskResponse createTask(
             CreateTaskRequest request,
             MultipartFile attachment
     );
+
+    // =========================================================
+    // DOWNLOAD FILES
+    // =========================================================
 
     // Download original task attachment
     Resource downloadAttachment(String taskId);
@@ -22,9 +30,17 @@ public interface TaskService {
     // Download submitted work proof
     Resource downloadProof(String taskId);
 
+    // =========================================================
+    // GET TASKS
+    // =========================================================
+
     List<TaskResponse> getAllTasks();
 
     TaskResponse getTaskById(String id);
+
+    // =========================================================
+    // UPDATE TASK
+    // =========================================================
 
     TaskResponse updateTask(
             String id,
@@ -32,32 +48,59 @@ public interface TaskService {
             MultipartFile attachment
     ) throws IOException;
 
-    // Accept a task
+    // =========================================================
+    // ACCEPT TASK
+    // =========================================================
+
     TaskResponse acceptTask(String taskId);
 
     // Tasks accepted by current user
     List<TaskResponse> getAcceptedTasks();
 
-    // Submit completed work
+    // =========================================================
+    // SUBMIT WORK
+    // =========================================================
+
     TaskResponse submitWork(
             String taskId,
             String completionMessage,
             MultipartFile proof
     ) throws IOException;
 
-    // Approve submitted work
+    // =========================================================
+    // APPROVE / REJECT WORK
+    // =========================================================
+
     TaskResponse approveTask(String taskId);
 
-    // Reject submitted work
     TaskResponse rejectTask(String taskId);
 
-    // Delete task
+    // =========================================================
+    // RATE COMPLETED TASK
+    // =========================================================
+
+    TaskResponse rateTask(
+            String taskId,
+            Integer rating,
+            String review
+    );
+
+    // =========================================================
+    // DELETE TASK
+    // =========================================================
+
     void deleteTask(String id);
 
-    // Tasks created by current user
+    // =========================================================
+    // MY TASKS
+    // =========================================================
+
     List<TaskResponse> getMyTasks();
 
-    // Explore available tasks
+    // =========================================================
+    // EXPLORE TASKS
+    // =========================================================
+
     Page<TaskResponse> exploreTasks(
             String search,
             String category,

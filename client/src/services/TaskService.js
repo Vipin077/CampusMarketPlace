@@ -1,20 +1,37 @@
 import api from "../utils/axiosConfig";
 
 const TaskService = {
+
+  // =========================================================
+  // GET ALL TASKS
+  // =========================================================
+
   async getAll() {
     const res = await api.get("/tasks");
     return res.data;
   },
+
+  // =========================================================
+  // GET MY CREATED TASKS
+  // =========================================================
 
   async getMyTasks() {
     const res = await api.get("/tasks/my");
     return res.data;
   },
 
+  // =========================================================
+  // GET ACCEPTED TASKS
+  // =========================================================
+
   async getAcceptedTasks() {
     const res = await api.get("/tasks/accepted");
     return res.data;
   },
+
+  // =========================================================
+  // EXPLORE TASKS
+  // =========================================================
 
   async exploreTasks(params) {
     const res = await api.get("/tasks/explore", {
@@ -24,10 +41,19 @@ const TaskService = {
     return res.data;
   },
 
+  // =========================================================
+  // GET TASK BY ID
+  // =========================================================
+
   async getTask(id) {
     const res = await api.get(`/tasks/${id}`);
+
     return res.data;
   },
+
+  // =========================================================
+  // CREATE TASK
+  // =========================================================
 
   async createTask(task, attachment) {
     const formData = new FormData();
@@ -40,15 +66,24 @@ const TaskService = {
     );
 
     if (attachment) {
-      formData.append("attachment", attachment);
+      formData.append(
+        "attachment",
+        attachment
+      );
     }
 
-    const res = await api.post("/tasks", formData);
+    const res = await api.post(
+      "/tasks",
+      formData
+    );
 
     return res.data;
   },
 
-  // Download original task attachment
+  // =========================================================
+  // DOWNLOAD ORIGINAL TASK ATTACHMENT
+  // =========================================================
+
   async downloadAttachment(taskId) {
     const response = await api.get(
       `/tasks/${taskId}/attachment`,
@@ -57,9 +92,14 @@ const TaskService = {
       }
     );
 
-    const url = window.URL.createObjectURL(response.data);
+    const url =
+      window.URL.createObjectURL(
+        response.data
+      );
 
-    const link = document.createElement("a");
+    const link =
+      document.createElement("a");
+
     link.href = url;
 
     const disposition =
@@ -68,23 +108,34 @@ const TaskService = {
     let fileName = "attachment";
 
     if (disposition) {
-      const match = disposition.match(/filename="(.+)"/);
+      const match =
+        disposition.match(
+          /filename="(.+)"/
+        );
 
       if (match) {
         fileName = match[1];
       }
     }
 
-    link.setAttribute("download", fileName);
+    link.setAttribute(
+      "download",
+      fileName
+    );
 
     document.body.appendChild(link);
+
     link.click();
+
     link.remove();
 
     window.URL.revokeObjectURL(url);
   },
 
-  // Download submitted work proof
+  // =========================================================
+  // DOWNLOAD SUBMITTED WORK PROOF
+  // =========================================================
+
   async downloadProof(taskId) {
     const response = await api.get(
       `/tasks/${taskId}/proof`,
@@ -93,9 +144,14 @@ const TaskService = {
       }
     );
 
-    const url = window.URL.createObjectURL(response.data);
+    const url =
+      window.URL.createObjectURL(
+        response.data
+      );
 
-    const link = document.createElement("a");
+    const link =
+      document.createElement("a");
+
     link.href = url;
 
     const disposition =
@@ -104,34 +160,58 @@ const TaskService = {
     let fileName = "proof";
 
     if (disposition) {
-      const match = disposition.match(/filename="(.+)"/);
+      const match =
+        disposition.match(
+          /filename="(.+)"/
+        );
 
       if (match) {
         fileName = match[1];
       }
     }
 
-    link.setAttribute("download", fileName);
+    link.setAttribute(
+      "download",
+      fileName
+    );
 
     document.body.appendChild(link);
+
     link.click();
+
     link.remove();
 
     window.URL.revokeObjectURL(url);
   },
 
-  async updateTask(id, task, attachment) {
-    const formData = new FormData();
+  // =========================================================
+  // UPDATE TASK
+  // =========================================================
+
+  async updateTask(
+    id,
+    task,
+    attachment
+  ) {
+
+    const formData =
+      new FormData();
 
     formData.append(
       "task",
-      new Blob([JSON.stringify(task)], {
-        type: "application/json",
-      })
+      new Blob(
+        [JSON.stringify(task)],
+        {
+          type: "application/json",
+        }
+      )
     );
 
     if (attachment) {
-      formData.append("attachment", attachment);
+      formData.append(
+        "attachment",
+        attachment
+      );
     }
 
     const res = await api.put(
@@ -142,6 +222,10 @@ const TaskService = {
     return res.data;
   },
 
+  // =========================================================
+  // ACCEPT TASK
+  // =========================================================
+
   async acceptTask(id) {
     const res = await api.post(
       `/tasks/${id}/accept`
@@ -150,8 +234,18 @@ const TaskService = {
     return res.data;
   },
 
-  async submitWork(id, completionMessage, proof) {
-    const formData = new FormData();
+  // =========================================================
+  // SUBMIT WORK
+  // =========================================================
+
+  async submitWork(
+    id,
+    completionMessage,
+    proof
+  ) {
+
+    const formData =
+      new FormData();
 
     formData.append(
       "completionMessage",
@@ -159,7 +253,10 @@ const TaskService = {
     );
 
     if (proof) {
-      formData.append("proof", proof);
+      formData.append(
+        "proof",
+        proof
+      );
     }
 
     const res = await api.post(
@@ -170,7 +267,10 @@ const TaskService = {
     return res.data;
   },
 
-  // Approve submitted work
+  // =========================================================
+  // APPROVE SUBMITTED WORK
+  // =========================================================
+
   async approveTask(id) {
     const res = await api.post(
       `/tasks/${id}/approve`
@@ -179,7 +279,10 @@ const TaskService = {
     return res.data;
   },
 
-  // Reject submitted work
+  // =========================================================
+  // REJECT SUBMITTED WORK
+  // =========================================================
+
   async rejectTask(id) {
     const res = await api.post(
       `/tasks/${id}/reject`
@@ -187,6 +290,31 @@ const TaskService = {
 
     return res.data;
   },
+
+  // =========================================================
+  // RATE WORKER
+  // =========================================================
+
+  async rateTask(
+    id,
+    rating,
+    review = ""
+  ) {
+
+    const res = await api.post(
+      `/tasks/${id}/rate`,
+      {
+        rating,
+        review,
+      }
+    );
+
+    return res.data;
+  },
+
+  // =========================================================
+  // DELETE TASK
+  // =========================================================
 
   async deleteTask(id) {
     const res = await api.delete(

@@ -31,6 +31,11 @@ public class TaskMapper {
                 .completionMessage(task.getCompletionMessage())
                 .submittedAt(task.getSubmittedAt())
 
+                // Rating details
+                .rating(task.getRating())
+                .review(task.getReview())
+                .ratedAt(task.getRatedAt())
+
                 // Task creation time
                 .createdAt(task.getCreatedAt())
 

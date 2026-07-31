@@ -43,6 +43,7 @@ public class Task {
 
     // Original task attachment
     private String attachmentUrl;
+
     // Proof uploaded after completing the task
     private String proofUrl;
 
@@ -51,6 +52,19 @@ public class Task {
 
     // Time when work was submitted
     private LocalDateTime submittedAt;
+
+    // =========================================================
+    // RATING
+    // =========================================================
+
+    // Rating given by task creator to assigned user (1 - 5)
+    private Integer rating;
+
+    // Optional review given with rating
+    private String review;
+
+    // Time when rating was submitted
+    private LocalDateTime ratedAt;
 
     // Task creation time
     private LocalDateTime createdAt;
