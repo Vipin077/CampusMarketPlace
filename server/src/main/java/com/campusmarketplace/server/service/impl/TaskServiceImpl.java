@@ -3,6 +3,7 @@ package com.campusmarketplace.server.service.impl;
 import com.campusmarketplace.server.dto.request.CreateTaskRequest;
 import com.campusmarketplace.server.dto.response.TaskResponse;
 import com.campusmarketplace.server.entity.Task;
+import com.campusmarketplace.server.entity.enums.TaskStatus;
 import com.campusmarketplace.server.exception.TaskNotFoundException;
 import com.campusmarketplace.server.exception.UnauthorizedException;
 import com.campusmarketplace.server.mapper.TaskMapper;
@@ -61,7 +62,7 @@ public class TaskServiceImpl implements TaskService {
                 .budget(request.getBudget())
                 .category(request.getCategory())
                 .location(request.getLocation())
-                .status("OPEN")
+                .status(TaskStatus.OPEN)
                 .createdBy(email)
                 .attachmentUrl(attachmentUrl)
                 .createdAt(LocalDateTime.now())
@@ -276,583 +277,565 @@ public class TaskServiceImpl implements TaskService {
     }
 
     // =========================================================
-    // ACCEPT TASK
-    // =========================================================
+// ACCEPT TASK
+// =========================================================
 
-    @Override
-    public TaskResponse acceptTask(
-            String taskId
-    ) {
+@Override
+public TaskResponse acceptTask(
+        String taskId
+) {
 
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() ->
-                        new TaskNotFoundException(
-                                "Task not found"
-                        )
-                );
-
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        String currentUser =
-                authentication.getName();
-
-        if (task.getCreatedBy()
-                .equals(currentUser)) {
-
-            throw new UnauthorizedException(
-                    "You cannot accept your own task"
+    Task task = taskRepository.findById(taskId)
+            .orElseThrow(() ->
+                    new TaskNotFoundException(
+                            "Task not found"
+                    )
             );
-        }
 
-        if (!"OPEN".equals(
-                task.getStatus()
-        )) {
+    Authentication authentication =
+            SecurityContextHolder
+                    .getContext()
+                    .getAuthentication();
 
-            throw new RuntimeException(
-                    "Task has already been accepted"
-            );
-        }
+    String currentUser =
+            authentication.getName();
 
-        task.setAssignedTo(
-                currentUser
-        );
+    if (task.getCreatedBy()
+            .equals(currentUser)) {
 
-        task.setAcceptedAt(
-                LocalDateTime.now()
-        );
-
-        task.setStatus(
-                "IN_PROGRESS"
-        );
-
-        Task updatedTask =
-                taskRepository.save(task);
-
-        notificationService.createNotification(
-                task.getCreatedBy(),
-                "ACCEPTED",
-                "Task Accepted",
-                currentUser +
-                        " accepted your task \"" +
-                        task.getTitle() +
-                        "\".",
-                task.getId()
-        );
-
-        return taskMapper.toResponse(
-                updatedTask
+        throw new UnauthorizedException(
+                "You cannot accept your own task"
         );
     }
 
-    // =========================================================
-    // GET TASKS ACCEPTED BY CURRENT USER
-    // =========================================================
+    if (task.getStatus() != TaskStatus.OPEN) {
 
-    @Override
-    public List<TaskResponse> getAcceptedTasks() {
-
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        String currentUser =
-                authentication.getName();
-
-        return taskRepository
-                .findByAssignedTo(currentUser)
-                .stream()
-                .map(taskMapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    // =========================================================
-    // SUBMIT WORK
-    // =========================================================
-
-    @Override
-    public TaskResponse submitWork(
-            String taskId,
-            String completionMessage,
-            MultipartFile proof
-    ) throws IOException {
-
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() ->
-                        new TaskNotFoundException(
-                                "Task not found"
-                        )
-                );
-
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        String currentUser =
-                authentication.getName();
-
-        if (task.getAssignedTo() == null ||
-                !task.getAssignedTo()
-                        .equals(currentUser)) {
-
-            throw new UnauthorizedException(
-                    "You are not assigned to this task"
-            );
-        }
-
-        if (!"IN_PROGRESS".equals(
-                task.getStatus()
-        )) {
-
-            throw new RuntimeException(
-                    "Task is not in progress"
-            );
-        }
-
-        if (proof != null &&
-                !proof.isEmpty()) {
-
-            String proofUrl =
-                    fileStorageService.store(
-                            proof,
-                            "task-proofs"
-                    );
-
-            task.setProofUrl(
-                    proofUrl
-            );
-        }
-
-        task.setCompletionMessage(
-                completionMessage
-        );
-
-        task.setSubmittedAt(
-                LocalDateTime.now()
-        );
-
-        task.setStatus(
-                "SUBMITTED"
-        );
-
-        Task updatedTask =
-                taskRepository.save(task);
-
-        notificationService.createNotification(
-                task.getCreatedBy(),
-                "SUBMITTED",
-                "Work Submitted",
-                currentUser +
-                        " submitted work for \"" +
-                        task.getTitle() +
-                        "\".",
-                task.getId()
-        );
-
-        return taskMapper.toResponse(
-                updatedTask
+        throw new RuntimeException(
+                "Task has already been accepted"
         );
     }
 
-    // =========================================================
-    // APPROVE SUBMITTED WORK
-    // =========================================================
+    task.setAssignedTo(
+            currentUser
+    );
 
-    @Override
-    public TaskResponse approveTask(
-            String taskId
-    ) {
+    task.setAcceptedAt(
+            LocalDateTime.now()
+    );
 
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() ->
-                        new TaskNotFoundException(
-                                "Task not found"
-                        )
-                );
+    task.setStatus(
+            TaskStatus.IN_PROGRESS
+    );
 
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
+    Task updatedTask =
+            taskRepository.save(task);
 
-        String currentUser =
-                authentication.getName();
+    notificationService.createNotification(
+            task.getCreatedBy(),
+            "ACCEPTED",
+            "Task Accepted",
+            currentUser +
+                    " accepted your task \"" +
+                    task.getTitle() +
+                    "\".",
+            task.getId()
+    );
 
-        if (!task.getCreatedBy()
-                .equals(currentUser)) {
+    return taskMapper.toResponse(
+            updatedTask
+    );
+}
 
-            throw new UnauthorizedException(
-                    "Only the task creator can approve submitted work"
+// =========================================================
+// GET TASKS ACCEPTED BY CURRENT USER
+// =========================================================
+
+@Override
+public List<TaskResponse> getAcceptedTasks() {
+
+    Authentication authentication =
+            SecurityContextHolder
+                    .getContext()
+                    .getAuthentication();
+
+    String currentUser =
+            authentication.getName();
+
+    return taskRepository
+            .findByAssignedTo(currentUser)
+            .stream()
+            .map(taskMapper::toResponse)
+            .collect(Collectors.toList());
+}
+
+// =========================================================
+// SUBMIT WORK
+// =========================================================
+
+@Override
+public TaskResponse submitWork(
+        String taskId,
+        String completionMessage,
+        MultipartFile proof
+) throws IOException {
+
+    Task task = taskRepository.findById(taskId)
+            .orElseThrow(() ->
+                    new TaskNotFoundException(
+                            "Task not found"
+                    )
             );
-        }
 
-        if (!"SUBMITTED".equals(
-                task.getStatus()
-        )) {
+    Authentication authentication =
+            SecurityContextHolder
+                    .getContext()
+                    .getAuthentication();
 
-            throw new RuntimeException(
-                    "Task is not waiting for approval"
-            );
-        }
+    String currentUser =
+            authentication.getName();
 
-        task.setStatus(
-                "COMPLETED"
-        );
+    if (task.getAssignedTo() == null ||
+            !task.getAssignedTo()
+                    .equals(currentUser)) {
 
-        Task updatedTask =
-                taskRepository.save(task);
-
-        if (task.getAssignedTo() != null) {
-
-            notificationService.createNotification(
-                    task.getAssignedTo(),
-                    "APPROVED",
-                    "Work Approved",
-                    "Your work for \"" +
-                            task.getTitle() +
-                            "\" has been approved.",
-                    task.getId()
-            );
-        }
-
-        return taskMapper.toResponse(
-                updatedTask
-        );
-    }
-
-    // =========================================================
-    // REJECT SUBMITTED WORK
-    // =========================================================
-
-    @Override
-    public TaskResponse rejectTask(
-            String taskId
-    ) {
-
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() ->
-                        new TaskNotFoundException(
-                                "Task not found"
-                        )
-                );
-
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        String currentUser =
-                authentication.getName();
-
-        if (!task.getCreatedBy()
-                .equals(currentUser)) {
-
-            throw new UnauthorizedException(
-                    "Only the task creator can reject submitted work"
-            );
-        }
-
-        if (!"SUBMITTED".equals(
-                task.getStatus()
-        )) {
-
-            throw new RuntimeException(
-                    "Task is not waiting for approval"
-            );
-        }
-
-        task.setStatus(
-                "IN_PROGRESS"
-        );
-
-        Task updatedTask =
-                taskRepository.save(task);
-
-        if (task.getAssignedTo() != null) {
-
-            notificationService.createNotification(
-                    task.getAssignedTo(),
-                    "REJECTED",
-                    "Work Rejected",
-                    "Your submitted work for \"" +
-                            task.getTitle() +
-                            "\" was rejected. " +
-                            "Please update and resubmit it.",
-                    task.getId()
-            );
-        }
-
-        return taskMapper.toResponse(
-                updatedTask
+        throw new UnauthorizedException(
+                "You are not assigned to this task"
         );
     }
 
-    // =========================================================
-    // RATE COMPLETED TASK
-    // =========================================================
+    if (task.getStatus() != TaskStatus.IN_PROGRESS) {
 
-    @Override
-    public TaskResponse rateTask(
-            String taskId,
-            Integer rating,
-            String review
-    ) {
-
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() ->
-                        new TaskNotFoundException(
-                                "Task not found"
-                        )
-                );
-
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        String currentUser =
-                authentication.getName();
-
-        // Only task creator can rate the worker
-        if (!task.getCreatedBy()
-                .equals(currentUser)) {
-
-            throw new UnauthorizedException(
-                    "Only the task creator can rate this task"
-            );
-        }
-
-        // Task must be completed first
-        if (!"COMPLETED".equals(
-                task.getStatus()
-        )) {
-
-            throw new RuntimeException(
-                    "Task must be completed before rating"
-            );
-        }
-
-        // Task must have an assigned worker
-        if (task.getAssignedTo() == null ||
-                task.getAssignedTo()
-                        .isBlank()) {
-
-            throw new RuntimeException(
-                    "No worker is assigned to this task"
-            );
-        }
-
-        // Rating must be between 1 and 5
-        if (rating == null ||
-                rating < 1 ||
-                rating > 5) {
-
-            throw new IllegalArgumentException(
-                    "Rating must be between 1 and 5"
-            );
-        }
-
-        // Prevent duplicate rating
-        if (task.getRating() != null) {
-
-            throw new RuntimeException(
-                    "This task has already been rated"
-            );
-        }
-
-        task.setRating(
-                rating
-        );
-
-        if (review != null &&
-                !review.isBlank()) {
-
-            task.setReview(
-                    review.trim()
-            );
-
-        } else {
-
-            task.setReview(null);
-        }
-
-        task.setRatedAt(
-                LocalDateTime.now()
-        );
-
-        Task updatedTask =
-                taskRepository.save(task);
-
-        // Notify worker
-        notificationService.createNotification(
-                task.getAssignedTo(),
-                "RATED",
-                "You Received a Rating",
-                "You received " +
-                        rating +
-                        " star" +
-                        (rating == 1 ? "" : "s") +
-                        " for \"" +
-                        task.getTitle() +
-                        "\".",
-                task.getId()
-        );
-
-        return taskMapper.toResponse(
-                updatedTask
+        throw new RuntimeException(
+                "Task is not in progress"
         );
     }
 
-    // =========================================================
-    // DELETE TASK
-    // =========================================================
+    if (proof != null &&
+            !proof.isEmpty()) {
 
-    @Override
-    public void deleteTask(
-            String id
-    ) {
-
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() ->
-                        new TaskNotFoundException(
-                                "Task not found"
-                        )
-                );
-
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        String currentUser =
-                authentication.getName();
-
-        if (!task.getCreatedBy()
-                .equals(currentUser)) {
-
-            throw new UnauthorizedException(
-                    "You are not authorized to delete this task"
-            );
-        }
-
-        // =====================================================
-        // DELETE ATTACHMENT FROM CLOUDINARY
-        // =====================================================
-
-        if (task.getAttachmentUrl() != null &&
-                !task.getAttachmentUrl()
-                        .isBlank()) {
-
-            try {
-
-                fileStorageService.delete(
-                        task.getAttachmentUrl(),
-                        "task-files"
-                );
-
-            } catch (Exception e) {
-
-                System.err.println(
-                        "Failed to delete task attachment from Cloudinary: "
-                                + e.getMessage()
-                );
-            }
-        }
-
-        // =====================================================
-        // DELETE PROOF FROM CLOUDINARY
-        // =====================================================
-
-        if (task.getProofUrl() != null &&
-                !task.getProofUrl()
-                        .isBlank()) {
-
-            try {
-
-                fileStorageService.delete(
-                        task.getProofUrl(),
+        String proofUrl =
+                fileStorageService.store(
+                        proof,
                         "task-proofs"
                 );
 
-            } catch (Exception e) {
+        task.setProofUrl(
+                proofUrl
+        );
+    }
 
-                System.err.println(
-                        "Failed to delete task proof from Cloudinary: "
-                                + e.getMessage()
-                );
-            }
+    task.setCompletionMessage(
+            completionMessage
+    );
+
+    task.setSubmittedAt(
+            LocalDateTime.now()
+    );
+
+    task.setStatus(
+            TaskStatus.SUBMITTED
+    );
+
+    Task updatedTask =
+            taskRepository.save(task);
+
+    notificationService.createNotification(
+            task.getCreatedBy(),
+            "SUBMITTED",
+            "Work Submitted",
+            currentUser +
+                    " submitted work for \"" +
+                    task.getTitle() +
+                    "\".",
+            task.getId()
+    );
+
+    return taskMapper.toResponse(
+            updatedTask
+    );
+}
+
+// =========================================================
+// APPROVE SUBMITTED WORK
+// =========================================================
+
+@Override
+public TaskResponse approveTask(
+        String taskId
+) {
+
+    Task task = taskRepository.findById(taskId)
+            .orElseThrow(() ->
+                    new TaskNotFoundException(
+                            "Task not found"
+                    )
+            );
+
+    Authentication authentication =
+            SecurityContextHolder
+                    .getContext()
+                    .getAuthentication();
+
+    String currentUser =
+            authentication.getName();
+
+    if (!task.getCreatedBy()
+            .equals(currentUser)) {
+
+        throw new UnauthorizedException(
+                "Only the task creator can approve submitted work"
+        );
+    }
+
+    if (task.getStatus() != TaskStatus.SUBMITTED) {
+
+        throw new RuntimeException(
+                "Task is not waiting for approval"
+        );
+    }
+
+    task.setStatus(
+            TaskStatus.COMPLETED
+    );
+
+    Task updatedTask =
+            taskRepository.save(task);
+
+    if (task.getAssignedTo() != null) {
+
+        notificationService.createNotification(
+                task.getAssignedTo(),
+                "APPROVED",
+                "Work Approved",
+                "Your work for \"" +
+                        task.getTitle() +
+                        "\" has been approved.",
+                task.getId()
+        );
+    }
+
+    return taskMapper.toResponse(
+            updatedTask
+    );
+}
+
+// =========================================================
+// REJECT SUBMITTED WORK
+// =========================================================
+
+@Override
+public TaskResponse rejectTask(
+        String taskId
+) {
+
+    Task task = taskRepository.findById(taskId)
+            .orElseThrow(() ->
+                    new TaskNotFoundException(
+                            "Task not found"
+                    )
+            );
+
+    Authentication authentication =
+            SecurityContextHolder
+                    .getContext()
+                    .getAuthentication();
+
+    String currentUser =
+            authentication.getName();
+
+    if (!task.getCreatedBy()
+            .equals(currentUser)) {
+
+        throw new UnauthorizedException(
+                "Only the task creator can reject submitted work"
+        );
+    }
+
+    if (task.getStatus() != TaskStatus.SUBMITTED) {
+
+        throw new RuntimeException(
+                "Task is not waiting for approval"
+        );
+    }
+
+    task.setStatus(
+            TaskStatus.IN_PROGRESS
+    );
+
+    Task updatedTask =
+            taskRepository.save(task);
+
+    if (task.getAssignedTo() != null) {
+
+        notificationService.createNotification(
+                task.getAssignedTo(),
+                "REJECTED",
+                "Work Rejected",
+                "Your submitted work for \"" +
+                        task.getTitle() +
+                        "\" was rejected. Please update and resubmit it.",
+                task.getId()
+        );
+    }
+
+    return taskMapper.toResponse(
+            updatedTask
+    );
+}
+// =========================================================
+// RATE COMPLETED TASK
+// =========================================================
+
+@Override
+public TaskResponse rateTask(
+        String taskId,
+        Integer rating,
+        String review
+) {
+
+    Task task = taskRepository.findById(taskId)
+            .orElseThrow(() ->
+                    new TaskNotFoundException(
+                            "Task not found"
+                    )
+            );
+
+    Authentication authentication =
+            SecurityContextHolder
+                    .getContext()
+                    .getAuthentication();
+
+    String currentUser =
+            authentication.getName();
+
+    // Only task creator can rate the worker
+    if (!task.getCreatedBy()
+            .equals(currentUser)) {
+
+        throw new UnauthorizedException(
+                "Only the task creator can rate this task"
+        );
+    }
+
+    // Task must be completed first
+    if (task.getStatus() != TaskStatus.COMPLETED) {
+
+        throw new RuntimeException(
+                "Task must be completed before rating"
+        );
+    }
+
+    // Task must have an assigned worker
+    if (task.getAssignedTo() == null ||
+            task.getAssignedTo().isBlank()) {
+
+        throw new RuntimeException(
+                "No worker is assigned to this task"
+        );
+    }
+
+    // Rating must be between 1 and 5
+    if (rating == null ||
+            rating < 1 ||
+            rating > 5) {
+
+        throw new IllegalArgumentException(
+                "Rating must be between 1 and 5"
+        );
+    }
+
+    // Prevent duplicate rating
+    if (task.getRating() != null) {
+
+        throw new RuntimeException(
+                "This task has already been rated"
+        );
+    }
+
+    task.setRating(rating);
+
+    if (review != null &&
+            !review.isBlank()) {
+
+        task.setReview(review.trim());
+
+    } else {
+
+        task.setReview(null);
+    }
+
+    task.setRatedAt(LocalDateTime.now());
+
+    Task updatedTask =
+            taskRepository.save(task);
+
+    notificationService.createNotification(
+            task.getAssignedTo(),
+            "RATED",
+            "You Received a Rating",
+            "You received " +
+                    rating +
+                    " star" +
+                    (rating == 1 ? "" : "s") +
+                    " for \"" +
+                    task.getTitle() +
+                    "\".",
+            task.getId()
+    );
+
+    return taskMapper.toResponse(updatedTask);
+}
+
+// =========================================================
+// DELETE TASK
+// =========================================================
+
+@Override
+public void deleteTask(
+        String id
+) {
+
+    Task task = taskRepository.findById(id)
+            .orElseThrow(() ->
+                    new TaskNotFoundException(
+                            "Task not found"
+                    )
+            );
+
+    Authentication authentication =
+            SecurityContextHolder
+                    .getContext()
+                    .getAuthentication();
+
+    String currentUser =
+            authentication.getName();
+
+    if (!task.getCreatedBy()
+            .equals(currentUser)) {
+
+        throw new UnauthorizedException(
+                "You are not authorized to delete this task"
+        );
+    }
+
+    // Only OPEN tasks can be deleted
+    if (task.getStatus() != TaskStatus.OPEN) {
+
+        throw new RuntimeException(
+                "Only OPEN tasks can be deleted."
+        );
+    }
+
+    // =====================================================
+    // DELETE ATTACHMENT FROM CLOUDINARY
+    // =====================================================
+
+    if (task.getAttachmentUrl() != null &&
+            !task.getAttachmentUrl().isBlank()) {
+
+        try {
+
+            fileStorageService.delete(
+                    task.getAttachmentUrl(),
+                    "task-files"
+            );
+
+        } catch (Exception e) {
+
+            System.err.println(
+                    "Failed to delete task attachment from Cloudinary: "
+                            + e.getMessage()
+            );
         }
-
-        taskRepository.delete(
-                task
-        );
     }
 
-    // =========================================================
-    // GET MY CREATED TASKS
-    // =========================================================
+    // =====================================================
+    // DELETE PROOF FROM CLOUDINARY
+    // =====================================================
 
-    @Override
-    public List<TaskResponse> getMyTasks() {
+    if (task.getProofUrl() != null &&
+            !task.getProofUrl().isBlank()) {
 
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
+        try {
 
-        String currentUser =
-                authentication.getName();
+            fileStorageService.delete(
+                    task.getProofUrl(),
+                    "task-proofs"
+            );
 
-        return taskRepository
-                .findByCreatedBy(currentUser)
-                .stream()
-                .map(taskMapper::toResponse)
-                .collect(Collectors.toList());
+        } catch (Exception e) {
+
+            System.err.println(
+                    "Failed to delete task proof from Cloudinary: "
+                            + e.getMessage()
+            );
+        }
     }
 
-    // =========================================================
-    // EXPLORE TASKS
-    // =========================================================
+    taskRepository.delete(task);
+}
 
-    @Override
-    public Page<TaskResponse> exploreTasks(
-            String search,
-            String category,
-            Double minBudget,
-            Double maxBudget,
-            int page,
-            int size,
-            String sortBy,
-            String direction
-    ) {
+// =========================================================
+// GET MY CREATED TASKS
+// =========================================================
 
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
+@Override
+public List<TaskResponse> getMyTasks() {
 
-        String currentUser =
-                authentication.getName();
+    Authentication authentication =
+            SecurityContextHolder
+                    .getContext()
+                    .getAuthentication();
 
-        Page<Task> taskPage =
-                taskRepository.exploreTasks(
-                        currentUser,
-                        search,
-                        category,
-                        minBudget,
-                        maxBudget,
-                        page,
-                        size,
-                        sortBy,
-                        direction
-                );
+    String currentUser =
+            authentication.getName();
 
-        return taskPage.map(
-                taskMapper::toResponse
-        );
-    }
+    return taskRepository
+            .findByCreatedBy(currentUser)
+            .stream()
+            .map(taskMapper::toResponse)
+            .collect(Collectors.toList());
+}
+
+// =========================================================
+// EXPLORE TASKS
+// =========================================================
+
+@Override
+public Page<TaskResponse> exploreTasks(
+        String search,
+        String category,
+        Double minBudget,
+        Double maxBudget,
+        int page,
+        int size,
+        String sortBy,
+        String direction
+) {
+
+    Authentication authentication =
+            SecurityContextHolder
+                    .getContext()
+                    .getAuthentication();
+
+    String currentUser =
+            authentication.getName();
+
+    Page<Task> taskPage =
+            taskRepository.exploreTasks(
+                    currentUser,
+                    search,
+                    category,
+                    minBudget,
+                    maxBudget,
+                    page,
+                    size,
+                    sortBy,
+                    direction
+            );
+
+    return taskPage.map(
+            taskMapper::toResponse
+    );
+}
 }

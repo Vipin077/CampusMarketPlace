@@ -16,7 +16,10 @@ public class TaskMapper {
                 .budget(task.getBudget())
                 .category(task.getCategory())
                 .location(task.getLocation())
-                .status(task.getStatus())
+
+                // Enum -> String
+                .status(task.getStatus() != null ? task.getStatus().name() : null)
+
                 .createdBy(task.getCreatedBy())
 
                 // User who accepted the task

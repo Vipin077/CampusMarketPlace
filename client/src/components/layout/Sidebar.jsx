@@ -9,6 +9,8 @@ import {
   Bell,
   User,
   LogOut,
+  Clock3,
+  Inbox,
 } from "lucide-react";
 
 import {
@@ -40,6 +42,22 @@ const menu = [
     path: "/explore",
     icon: Search,
   },
+
+  // ============================
+  // NEW
+  // ============================
+
+  {
+    name: "Pending Requests",
+    path: "/pending-requests",
+    icon: Clock3,
+  },
+  {
+    name: "My Requests",
+    path: "/my-requests",
+    icon: Inbox,
+  },
+
   {
     name: "Messages",
     path: "/messages",
@@ -53,6 +71,7 @@ const menu = [
 ];
 
 export default function Sidebar() {
+
   const navigate = useNavigate();
 
   const [unreadMessages, setUnreadMessages] =
@@ -69,19 +88,25 @@ export default function Sidebar() {
   // =========================================================
 
   async function loadUnreadMessages() {
+
     try {
+
       const count =
         await MessageService.getUnreadCount();
 
       setUnreadMessages(
         Number(count) || 0
       );
+
     } catch (error) {
+
       console.error(
         "Failed to load unread message count:",
         error
       );
+
     }
+
   }
 
   // =========================================================
@@ -89,14 +114,13 @@ export default function Sidebar() {
   // =========================================================
 
   useEffect(() => {
+
     loadUnreadMessages();
 
-    // Conversation was opened/read
     const handleMessagesRead = () => {
       loadUnreadMessages();
     };
 
-    // New unread message received
     const handleMessagesUpdated = () => {
       loadUnreadMessages();
     };
@@ -112,6 +136,7 @@ export default function Sidebar() {
     );
 
     return () => {
+
       window.removeEventListener(
         "messages-read",
         handleMessagesRead
@@ -121,7 +146,9 @@ export default function Sidebar() {
         "messages-updated",
         handleMessagesUpdated
       );
+
     };
+
   }, []);
 
   // =========================================================
@@ -129,9 +156,13 @@ export default function Sidebar() {
   // =========================================================
 
   const handleProfileClick = () => {
+
     if (user?.id) {
+
       navigate(`/profile/${user.id}`);
+
     } else {
+
       console.error(
         "User ID not found"
       );
@@ -139,7 +170,9 @@ export default function Sidebar() {
       alert(
         "Unable to open profile. Please login again."
       );
+
     }
+
   };
 
   // =========================================================
@@ -147,11 +180,13 @@ export default function Sidebar() {
   // =========================================================
 
   const handleLogout = () => {
+
     AuthService.logout();
 
     navigate("/login", {
       replace: true,
     });
+
   };
 
   // =========================================================
@@ -159,6 +194,7 @@ export default function Sidebar() {
   // =========================================================
 
   return (
+
     <aside className="w-64 h-screen sticky top-0 shrink-0 bg-slate-900 text-white flex flex-col">
 
       {/* =====================================================
@@ -183,9 +219,11 @@ export default function Sidebar() {
       <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
 
         {menu.map((item) => {
+
           const Icon = item.icon;
 
           return (
+
             <NavLink
               key={item.name}
               to={item.path}
@@ -204,25 +242,23 @@ export default function Sidebar() {
                 {item.name}
               </span>
 
-              {/* =============================================
-                  UNREAD MESSAGE BADGE
-              ============================================= */}
-
               {item.name === "Messages" &&
                 unreadMessages > 0 && (
 
-                  <span className="ml-auto min-w-6 h-6 px-1.5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
+                <span className="ml-auto min-w-6 h-6 px-1.5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
 
-                    {unreadMessages > 99
-                      ? "99+"
-                      : unreadMessages}
+                  {unreadMessages > 99
+                    ? "99+"
+                    : unreadMessages}
 
-                  </span>
+                </span>
 
-                )}
+              )}
 
             </NavLink>
+
           );
+
         })}
 
         {/* =====================================================
@@ -268,5 +304,7 @@ export default function Sidebar() {
       </div>
 
     </aside>
+
   );
+
 }

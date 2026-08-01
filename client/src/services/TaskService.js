@@ -234,6 +234,89 @@ const TaskService = {
     return res.data;
   },
 
+    // =========================================================
+  // REQUEST TASK
+  // =========================================================
+
+  async requestTask(taskId, message = "") {
+
+    const res = await api.post(
+      `/task-requests/${taskId}`,
+      null,
+      {
+        params: {
+          message,
+        },
+      }
+    );
+
+    return res.data;
+  },
+
+  // =========================================================
+  // GET MY REQUESTS
+  // =========================================================
+
+  async getMyRequests() {
+
+    const res = await api.get(
+      "/task-requests/my"
+    );
+
+    return res.data;
+  },
+
+  // =========================================================
+  // GET OWNER PENDING REQUESTS
+  // =========================================================
+
+  async getPendingRequests() {
+
+    const res = await api.get(
+      "/task-requests/pending"
+    );
+
+    return res.data;
+  },
+
+  // =========================================================
+  // GET ALL REQUESTS OF A TASK
+  // =========================================================
+
+  async getTaskRequests(taskId) {
+
+    const res = await api.get(
+      `/task-requests/task/${taskId}`
+    );
+
+    return res.data;
+  },
+
+  // =========================================================
+  // APPROVE REQUEST
+  // =========================================================
+
+  async approveRequest(requestId) {
+
+    const res = await api.post(
+      `/task-requests/${requestId}/approve`
+    );
+
+    return res.data;
+  },
+
+  // =========================================================
+  // REJECT REQUEST
+  // =========================================================
+
+  async rejectRequest(requestId) {
+
+    const res = await api.post(
+      `/task-requests/${requestId}/reject`
+    );
+
+    return res.data;
+  },
   // =========================================================
   // SUBMIT WORK
   // =========================================================

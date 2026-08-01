@@ -1,5 +1,6 @@
 package com.campusmarketplace.server.entity;
 
+import com.campusmarketplace.server.entity.enums.TaskStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,17 +30,32 @@ public class Task {
 
     private String location;
 
-    // OPEN, IN_PROGRESS, SUBMITTED, COMPLETED
-    private String status;
+    /**
+     * Status Flow:
+     * OPEN
+     * PENDING_APPROVAL
+     * IN_PROGRESS
+     * SUBMITTED
+     * COMPLETED
+     * CANCELLED
+     * EXPIRED
+     */
+    private TaskStatus status;
 
     // Task creator
     private String createdBy;
 
-    // User who accepted the task
+    // User selected by the owner to perform the task
     private String assignedTo;
 
-    // Time when task was accepted
+    // Time when user requested the task
     private LocalDateTime acceptedAt;
+
+    // Time when owner approved the request
+    private LocalDateTime approvedAt;
+
+    // Deadline for completing task
+    private LocalDateTime deadline;
 
     // Original task attachment
     private String attachmentUrl;
@@ -47,7 +63,7 @@ public class Task {
     // Proof uploaded after completing the task
     private String proofUrl;
 
-    // Message submitted along with proof
+    // Message submitted with proof
     private String completionMessage;
 
     // Time when work was submitted
@@ -57,10 +73,10 @@ public class Task {
     // RATING
     // =========================================================
 
-    // Rating given by task creator to assigned user (1 - 5)
+    // Rating given by task creator to assigned user (1-5)
     private Integer rating;
 
-    // Optional review given with rating
+    // Optional review
     private String review;
 
     // Time when rating was submitted

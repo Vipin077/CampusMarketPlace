@@ -47,28 +47,38 @@ export default function ExploreTasks() {
       setLoading(false);
     }
   };
+// =====================================================
+// REQUEST TASK
+// =====================================================
+const handleRequest = async (taskId) => {
 
-  // =====================================================
-  // ACCEPT TASK
-  // =====================================================
+  const message = window.prompt(
+    "Enter a message for the task owner (optional):"
+  );
 
-  const handleAccept = async (taskId) => {
-    try {
-      await TaskService.acceptTask(taskId);
+  try {
 
-      alert("Task accepted successfully!");
+    await TaskService.requestTask(
+      taskId,
+      message || ""
+    );
 
-      fetchTasks();
-    } catch (error) {
-      console.error(error);
+    alert("Task request sent successfully!");
 
-      alert(
-        error.response?.data?.message ||
-          "Failed to accept task."
-      );
-    }
-  };
+    fetchTasks();
 
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      error.response?.data?.message ||
+      "Failed to send request."
+    );
+
+  }
+
+};
   // =====================================================
   // VIEW USER PROFILE
   // =====================================================
@@ -264,12 +274,12 @@ export default function ExploreTasks() {
                     {task.status === "OPEN" ? (
 
                       <button
-                        onClick={() =>
-                          handleAccept(task.id)
-                        }
+                       onClick={() =>
+                      handleRequest(task.id)
+                       }
                         className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
                       >
-                        Accept
+                         Request Task
                       </button>
 
                     ) : (
@@ -278,7 +288,7 @@ export default function ExploreTasks() {
                         disabled
                         className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed"
                       >
-                        Accepted
+                        Requested
                       </button>
 
                     )}

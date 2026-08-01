@@ -15,6 +15,8 @@ import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import Leaderboard from "./pages/Leaderboard";
 import SubmitWork from "./pages/SubmitWork";
+import PendingRequests from "./pages/PendingRequests";
+import MyRequests from "./pages/MyRequests";
 
 import PrivateRoute from "./components/auth/PrivateRoute";
 
@@ -122,10 +124,31 @@ function App() {
       />
 
       {/* =====================================================
+          REQUESTS
+      ===================================================== */}
+
+      <Route
+        path="/pending-requests"
+        element={
+          <PrivateRoute>
+            <PendingRequests />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/my-requests"
+        element={
+          <PrivateRoute>
+            <MyRequests />
+          </PrivateRoute>
+        }
+      />
+
+      {/* =====================================================
           PROFILE ROUTES
       ===================================================== */}
 
-      {/* Logged-in user's own profile */}
       <Route
         path="/profile"
         element={
@@ -135,7 +158,6 @@ function App() {
         }
       />
 
-      {/* View another user's profile */}
       <Route
         path="/profile/:id"
         element={
