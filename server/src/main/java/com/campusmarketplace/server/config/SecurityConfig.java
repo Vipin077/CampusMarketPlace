@@ -80,7 +80,8 @@ public class SecurityConfig {
         // React frontend
         configuration.setAllowedOrigins(
                 List.of(
-                        "http://localhost:5173"
+                        "http://localhost:5173" ,
+                         "https://campus-market-place-i6n9qhoi4-abcd-e695.vercel.app"
                 )
         );
 
