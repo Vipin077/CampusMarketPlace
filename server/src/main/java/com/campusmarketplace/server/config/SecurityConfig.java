@@ -1,5 +1,5 @@
 package com.campusmarketplace.server.config;
-
+import org.springframework.http.HttpMethod;
 import com.campusmarketplace.server.security.JwtAuthenticationFilter;
 import com.campusmarketplace.server.service.impl.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -46,23 +46,19 @@ public class SecurityConfig {
 
                 .authenticationProvider(authenticationProvider())
 
-                .authorizeHttpRequests(auth -> auth
+               .authorizeHttpRequests(auth -> auth
 
-                        // Authentication endpoints
-                        .requestMatchers(
-                                "/api/auth/**"
-                        ).permitAll()
+    .requestMatchers(HttpMethod.OPTIONS, "/**")
+    .permitAll()
 
-                        // SockJS / WebSocket handshake endpoints
-                        .requestMatchers(
-                                "/ws",
-                                "/ws/**"
-                        ).permitAll()
+    .requestMatchers("/api/auth/**")
+    .permitAll()
 
-                        // Everything else requires JWT authentication
-                        .anyRequest().authenticated()
-                )
+    .requestMatchers("/ws", "/ws/**")
+    .permitAll()
 
+    .anyRequest().authenticated()
+)
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -78,12 +74,12 @@ public class SecurityConfig {
                 new CorsConfiguration();
 
         // React frontend
-        configuration.setAllowedOrigins(
-                List.of(
-                        "http://localhost:5173" ,
-                         "https://campus-market-place-i6n9qhoi4-abcd-e695.vercel.app"
-                )
-        );
+        configuration.setAllowedOriginPatterns(
+        List.of(
+                "http://localhost:5173",
+                "https://*.vercel.app"
+        )
+);
 
         configuration.setAllowedMethods(
                 List.of(
