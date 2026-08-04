@@ -55,7 +55,8 @@ public class WebSocketConfig
         registry
                 .addEndpoint("/ws")
                 .setAllowedOriginPatterns(
-                        "http://localhost:5173"
+                        "http://localhost:5173",
+                         "https://*.vercel.app"
                 )
                 .withSockJS();
     }

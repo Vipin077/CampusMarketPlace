@@ -1,7 +1,7 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
-const WS_URL = "http://localhost:8080/ws";
+const WS_URL = "https://campusmarketplace-production-3ac8.up.railway.app";
 
 class WebSocketService {
   constructor() {
